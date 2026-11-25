@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -24,3 +24,91 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/*
+  PASTE THIS AT THE BOTTOM OF app/globals.css
+  (keep your existing Tailwind lines at the top of that file).
+*/
+
+/* ---------- Your color theme ---------- */
+:root {
+  --wine: #4a0a0f;        /* main background */
+  --wine-deep: #2e0508;   /* darker sections, text on light */
+  --claret: #7a1520;      /* glows, cards */
+  --ivory: #f6efe6;       /* light sections, text on dark */
+  --gold: #c9a45c;        /* thin lines, small accents (kasavu gold) */
+}
+
+/* ---------- Your chosen font: Merisca ----------
+  Put the font file in /public/fonts/ and name it merisca.woff2
+  (or merisca.otf). Until then the page uses Gloock as a stand-in. */
+@font-face {
+  font-family: "Merisca";
+  src: url("/fonts/merisca.woff2") format("woff2"),
+    url("/fonts/merisca.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+.font-display {
+  font-family: "Merisca", var(--font-gloock), Georgia, serif;
+}
+
+body {
+  background: var(--wine);
+  color: var(--ivory);
+  font-family: var(--font-jost), system-ui, sans-serif;
+}
+
+/* ---------- Kasavu band ----------
+  Kerala's wedding cloth is cream with a gold border.
+  This thin strip echoes it between sections. */
+.kasavu {
+  box-sizing: border-box;
+  height: 34px;
+  background-color: var(--ivory);
+  background-image: url('/kasavu-tile.png');
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-position: center;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+}
+
+/* ---------- The one page-load moment: profile arches rise up ---------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* ---------- Accessibility ---------- */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
