@@ -15,6 +15,7 @@ import { useState, type FormEvent } from "react";
 
 // Where the app should send people after they sign in
 const AFTER_LOGIN_URL = "/dashboard";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 type FieldErrors = {
   identifier?: string;
@@ -71,8 +72,9 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${API}/api/auth/login`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           identifier: identifier.trim(),

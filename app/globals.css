@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -109,6 +109,12 @@ body {
 
 html {
   scroll-behavior: smooth;
+}
+
+@media (max-width: 767px) {
+  body.has-mobile-tabbar {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 

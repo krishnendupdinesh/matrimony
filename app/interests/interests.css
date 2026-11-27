@@ -1,0 +1,18 @@
+/* Extends matches.css (square cards) and dashboard.css (theme) */
+.in{max-width:1400px;margin:auto;padding:22px 16px 56px}
+.in__head{margin-bottom:16px}
+.in__head h1{font:700 24px Inter,system-ui,sans-serif;letter-spacing:-.4px;margin-bottom:4px}
+.in .tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+.in .tabs button{background:none;border:0;padding:8px 0;font:500 13px Inter,system-ui,sans-serif;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.in .tabs button.on{color:var(--maroon);border-color:var(--maroon);font-weight:600}
+.in .tabs button:focus-visible{outline:2px solid var(--maroon);outline-offset:2px}
+
+.in-cards{grid-template-columns:repeat(auto-fill,minmax(245px,1fr))}
+.icard--new{border-color:#EBD4DA}
+.icard__note{margin:8px 4px 0;padding:7px 10px;border-left:2.5px solid var(--maroon);background:var(--bg);border-radius:0 7px 7px 0;font-size:12px;line-height:1.45;color:var(--ink)}
+.irow__state{padding:0 4px;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:6px}
+.irow__state--ok{color:var(--ok)}
+.mcard__btns--single{grid-template-columns:1fr}
+.mcard__btns .btn[disabled]{opacity:.55;cursor:default}
+.in__empty{text-align:center;padding:40px 20px;display:grid;gap:14px;justify-items:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18)}

@@ -1,0 +1,39 @@
+/* Uses variables and buttons from dashboard.css */
+.plans{max-width:1400px;margin:auto;padding:28px 16px 64px}
+.plans__head{text-align:center;max-width:580px;margin:0 auto 32px}
+.plans__head h1{font:700 26px/1.2 Inter,system-ui,sans-serif;letter-spacing:-.45px;margin-bottom:8px}
+.plans__h2{font:700 19px Inter,system-ui,sans-serif;letter-spacing:-.25px;margin:44px 0 14px}
+
+.plan-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:stretch}
+.plan{display:flex;flex-direction:column;gap:5px;position:relative;padding:20px}
+.plan h2{font:700 17px Inter,system-ui,sans-serif}
+.plan--pop{border:2px solid var(--maroon);box-shadow:0 8px 24px rgba(107,21,48,.09)}
+.plan__flag{position:absolute;top:-11px;left:20px;background:var(--maroon);color:#fff;font:600 11px Inter,system-ui,sans-serif;padding:3px 10px;border-radius:99px}
+.plan__price{margin:12px 0 14px;display:flex;align-items:baseline;gap:6px}
+.plan__price b{font:700 26px Inter,system-ui,sans-serif;letter-spacing:-.4px;color:var(--maroon)}
+.plan__price span{font-size:12.5px;color:var(--muted)}
+.plan .btn[disabled]{opacity:.55;cursor:default}
+.plan ul{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:10px;font-size:13px}
+.plan li{display:flex;gap:8px;align-items:flex-start}
+.tick{color:var(--ok);font-weight:700}
+.dash-x{color:#C9BDB2}
+
+.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 24px;margin-top:28px;font-size:13px;color:var(--muted)}
+.trust span::before{content:"✓";color:var(--maroon);font-weight:700;margin-right:7px}
+
+.table-wrap{padding:0;overflow-x:auto}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:13px;min-width:620px}
+.table-wrap th,.table-wrap td{padding:11px 16px;text-align:center;border-bottom:1px solid var(--line)}
+.table-wrap thead th{background:var(--tint);font-weight:600}
+.table-wrap tbody th{text-align:left;font-weight:500}
+.table-wrap tr:last-child th,.table-wrap tr:last-child td{border-bottom:0}
+
+.faq{max-width:740px;margin:0 auto}
+.faq .plans__h2{text-align:center}
+.faq details{margin-bottom:10px;padding:14px 18px}
+.faq summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.faq details p{margin-top:8px;line-height:1.55}
+.faq>p{text-align:center;margin-top:20px}
+
+@media(max-width:1000px){.plan-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.plan-grid{grid-template-columns:1fr}.plans__head h1{font-size:22px}}

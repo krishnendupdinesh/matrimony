@@ -1,0 +1,23 @@
+/* Extends matches.css (cards, filter panel) and dashboard.css (theme) */
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:7px;font:600 12.5px Inter,system-ui,sans-serif;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--maroon);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--maroon);outline-offset:2px}
+.saved,.applied{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
+.chip-btn{padding:5px 10px;border-radius:99px;border:1px solid var(--line);background:#fff;font:500 12px Inter,system-ui,sans-serif;cursor:pointer;color:var(--ink)}
+.chip-btn:hover{background:var(--tint);border-color:#EBD4DA}
+.applied .chip-btn{background:var(--tint);color:var(--maroon-d);border-color:#EBD4DA}
+.bar-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;font-size:13px}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px;cursor:pointer}
+.check input{accent-color:var(--maroon);width:15px;height:15px}
+.savebox{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.savebox input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:400 12.5px Inter,system-ui,sans-serif;min-width:0}
+.savebox .btn[disabled],.idbox .btn[disabled],.pager .btn[disabled]{opacity:.5;cursor:default}
+.pager{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:24px}
+.idbox{max-width:540px}
+.idbox h2{font:700 17px Inter,system-ui,sans-serif;margin-bottom:4px}
+.idbox__row{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0}
+.idbox__row input{padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:500 14px Inter,system-ui,sans-serif;text-transform:uppercase}
+.idbox__row input:focus{outline:2px solid var(--maroon);border-color:var(--maroon)}
+.idbox__res{max-width:260px}
+.note{margin-top:10px;padding:10px 12px;background:var(--tint);border-radius:8px;font-size:12.5px;color:var(--maroon-d)}

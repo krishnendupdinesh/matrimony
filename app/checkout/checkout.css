@@ -1,0 +1,58 @@
+/* Uses variables, buttons, .field and .check styles from dashboard.css */
+.co{max-width:1200px;margin:auto;padding:22px 16px 64px;color:var(--ink)}
+.co__top{display:grid;gap:6px;margin-bottom:18px}
+.co__top h1{font:700 24px Inter,system-ui,sans-serif;letter-spacing:-.4px}
+.steps{list-style:none;display:flex;gap:10px;padding:0;margin:4px 0 0;font-size:12px;color:var(--muted)}
+.steps li{display:flex;align-items:center;gap:8px}
+.steps li+li::before{content:"";width:24px;height:1px;background:var(--line)}
+.steps .done{color:var(--ok);font-weight:600}.steps .now{color:var(--maroon);font-weight:700}
+
+.co__layout{display:grid;grid-template-columns:1fr 355px;gap:20px;align-items:start}
+.co__left{display:grid;gap:14px}
+.co__sec h2,.co__sum h2{font:700 16px Inter,system-ui,sans-serif;margin-bottom:12px}
+.co__grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.field--wide{grid-column:1/-1}.field>span{font-weight:600}
+.field input{padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:400 13.5px Inter,system-ui,sans-serif;background:#fff;color:var(--ink);width:100%;box-sizing:border-box}
+.field input::placeholder,.coupon input::placeholder{color:var(--muted)}
+.field input:focus,.coupon input:focus{outline:2px solid var(--maroon);outline-offset:1px;border-color:var(--maroon)}
+
+.methods{display:grid;gap:8px}
+.method{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#fff;color:var(--ink)}
+.method.on{border:2px solid var(--maroon);background:var(--tint);padding:11px 13px}
+.method input{accent-color:var(--maroon);width:16px;height:16px}
+.method b{display:block;font-size:13.5px}.method small{color:var(--muted);font-size:12px}
+.method:focus-within{outline:2px solid var(--maroon);outline-offset:2px}
+.note{margin-top:12px;padding:10px 12px;background:var(--tint);border-radius:8px;font-size:12px;color:var(--maroon-d)}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5;cursor:pointer;color:var(--ink)}
+.check input{accent-color:var(--maroon);width:16px;height:16px;margin-top:2px}
+.co__fail{background:#FDECEA;border-color:#F4C7C3;color:#8C1D18;font-size:13px}
+
+/* Summary */
+.co__right{position:sticky;top:76px}
+.co__plan{display:flex;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:14px}
+.co__plan .muted{margin-top:2px}
+.co__feat{list-style:none;margin:12px 0;padding:0;display:grid;gap:7px;font-size:12.5px}
+.co__feat span{color:var(--ok);font-weight:700;margin-right:7px}
+.coupon{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:6px}
+.coupon input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:500 12.5px Inter,system-ui,sans-serif;background:#fff;color:var(--ink);text-transform:uppercase;min-width:0}
+.coupon .btn[disabled],.co__pay[disabled]{opacity:.55;cursor:default}
+.coupon__msg{font-size:12px;margin-top:6px}
+.ok{color:var(--ok);font-weight:600}.err{color:#B3261E;font-size:12px;margin-top:8px}
+.co__math{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:8px;font-size:13px}
+.co__math div{display:flex;justify-content:space-between}.co__math dd{margin:0}
+.co__total{padding-top:10px;border-top:1px solid var(--line);font:700 16px Inter,system-ui,sans-serif}
+.co__pay{margin-top:14px;padding:11px}
+.co__trust{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:5px;font-size:11.5px;color:var(--muted);text-align:center}
+
+/* Success / missing */
+.co__box{max-width:480px;margin:40px auto;text-align:center;display:grid;gap:12px;justify-items:center}
+.co__box h1{font:700 24px Inter,system-ui,sans-serif}
+.co__tick{width:56px;height:56px;border-radius:50%;background:#ECF7F1;color:var(--ok);display:grid;place-items:center;font-size:28px;font-weight:700}
+.co__receipt{width:100%;margin:4px 0;padding:4px 16px;background:var(--bg);border-radius:10px;text-align:left}
+.co__receipt div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.co__receipt div:last-child{border:0}.co__receipt dt{color:var(--muted)}.co__receipt dd{margin:0;font-weight:600}
+.co__btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+@media(max-width:900px){.co__layout{grid-template-columns:1fr}.co__right{position:static;order:-1}}
+@media(max-width:560px){.co__grid{grid-template-columns:1fr}}

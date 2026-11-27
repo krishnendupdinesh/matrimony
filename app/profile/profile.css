@@ -1,0 +1,40 @@
+/* Uses variables and buttons from dashboard.css */
+.pf{max-width:1040px;margin:auto;padding:24px 16px 110px;display:grid;gap:16px}
+.pf__head h1{font:700 24px Inter,system-ui,sans-serif;letter-spacing:-.4px;margin-bottom:4px}
+.pf__sec h2{font:700 16.5px Inter,system-ui,sans-serif;margin:0 0 4px}
+.pf__sec>.muted{margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;margin-top:12px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.field--wide{grid-column:1/-1}
+.field>span{font-weight:600}
+.field small{color:var(--muted);font-size:11.5px}
+.field input,.field select,.field textarea{font:400 13.5px Inter,system-ui,sans-serif;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%;box-sizing:border-box}
+.field textarea{resize:vertical}
+.time-row{display:grid;grid-template-columns:1fr 1fr 82px;gap:8px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--maroon);outline-offset:1px;border-color:var(--maroon)}
+.note{margin-top:14px;padding:10px 12px;background:var(--tint);border-radius:8px;font-size:12px;color:var(--maroon-d)}
+
+/* Photos */
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:10px}
+.photo-tile{margin:0;position:relative;border-radius:12px;overflow:hidden;border:2px solid var(--line);aspect-ratio:3/4;background:var(--bg)}
+.photo-tile.is-primary{border-color:var(--maroon)}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.badge{position:absolute;top:8px;left:8px;background:var(--maroon);color:#fff;font:600 11px Inter,system-ui,sans-serif;padding:3px 9px;border-radius:99px}
+.photo-tile figcaption{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:5px;padding:8px;background:linear-gradient(transparent,rgba(30,10,16,.7))}
+.photo-tile figcaption button{font:600 11.5px Inter,system-ui,sans-serif;padding:6px;border-radius:7px;border:0;background:#fff;color:var(--maroon);cursor:pointer}
+.photo-tile figcaption .danger{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6)}
+.photo-add{aspect-ratio:3/4;border:1.5px dashed #D8CED2;border-radius:12px;background:#fff;color:var(--maroon);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:600 13px Inter,system-ui,sans-serif}
+.photo-add b{font-size:26px;font-weight:500}
+.photo-add:hover{background:var(--tint)}
+.photo-tile button:focus-visible,.photo-add:focus-visible{outline:2px solid var(--maroon);outline-offset:2px}
+
+/* Save bar */
+.savebar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;z-index:15}
+.savebar__msg{font-size:13px;max-width:840px}
+.err{color:#B3261E}.ok{color:var(--ok);font-weight:600}
+.savebar .btn[disabled]{opacity:.6;cursor:default}
+
+@media(max-width:640px){
+  .grid{grid-template-columns:1fr}
+  .photos{grid-template-columns:repeat(2,1fr)}
+}
