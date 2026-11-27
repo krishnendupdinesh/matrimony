@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { adminFetch } from "@/lib/adminApi";
+import { adminApiFetch } from "@/lib/api";
+import type { AdminUser } from "@/lib/types";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
@@ -17,15 +18,14 @@ const NAV = [
 function AdminShellInner({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
-  const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [checkedPath, setCheckedPath] = useState<string | null>(null);
   const isLogin = path === "/admin/login";
 
   useEffect(() => {
     if (isLogin) return;
     let active = true;
-    adminFetch("/api/admin/me")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+    adminApiFetch<{ admin: AdminUser }>("/api/admin/me")
       .then((d) => {
         if (!active) return;
         setAdmin(d.admin);
@@ -40,7 +40,7 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   }, [isLogin, path, router]);
 
   const logout = async () => {
-    await adminFetch("/api/admin/logout", { method: "POST" }).catch(() => {});
+    await adminApiFetch("/api/admin/logout", { method: "POST" }).catch(() => {});
     setAdmin(null);
     router.replace("/admin/login");
   };
@@ -51,8 +51,10 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="ad">
       <aside className="ad__side">
-        <Link href="/admin" className="ad__logo">
-          Sammatham <small>Admin</small>
+        <Link href="/admin" className="ad__logo" aria-label="Sammatham Admin">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-maroon.png" alt="Sammatham" className="ad__logo-img" />
+          <small>Admin</small>
         </Link>
         <nav aria-label="Admin">
           {NAV.map((n) => (

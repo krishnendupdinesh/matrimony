@@ -1,6 +1,7 @@
+import { API_URL } from "@/lib/api";
 import type { Member } from "../AppNavbar";
 
-export const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+export const API = API_URL;
 export const LIMIT = 10;
 
 export async function api(path: string, init?: RequestInit) {

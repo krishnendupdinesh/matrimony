@@ -25,8 +25,9 @@ export default function LoginPage() {
                 <div className="pointer-events-none absolute inset-0 bg-[url('/login-bg.jpg')] bg-cover bg-center" />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[var(--wine)]/85 via-[var(--wine)]/60 to-[var(--wine-deep)]/90" />
 
-                <Link href="/" className="font-display relative text-3xl">
-                    {BRAND}
+                <Link href="/" className="relative inline-flex w-fit items-center" aria-label={BRAND}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/logo-white.png" alt={BRAND} className="h-14 w-auto" />
                 </Link>
 
                 <div className="relative max-w-md">
@@ -59,8 +60,9 @@ export default function LoginPage() {
                     <div className="absolute inset-0 bg-[url('/login-bg.jpg')] bg-cover bg-center" />
                     <div className="absolute inset-0 bg-gradient-to-b from-[var(--wine)]/85 to-[var(--wine-deep)]/90" />
                     <div className="relative mx-auto w-full max-w-md">
-                        <Link href="/" className="font-display block text-3xl">
-                            {BRAND}
+                        <Link href="/" className="inline-flex items-center" aria-label={BRAND}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/logo-white.png" alt={BRAND} className="h-12 w-auto" />
                         </Link>
                         <p className="font-display mt-4 text-2xl uppercase leading-[1] sm:text-3xl">
                             Every good match starts with a conversation

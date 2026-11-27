@@ -3,19 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { ApiError } from "@/lib/api";
+import { useAuth } from "../components/AuthProvider";
 
 /* =====================================================================
-   LoginForm - the working part of the login page.
-   What it does:
-   1. Checks that both fields are filled in
-   2. Sends them to POST /api/auth/login
-   3. Shows a clear message if something goes wrong
-   4. Sends the person to /dashboard when login works
+   LoginForm - signs in via AuthProvider (POST /api/auth/login) and
+   redirects to /dashboard on success.
    ===================================================================== */
 
-// Where the app should send people after they sign in
 const AFTER_LOGIN_URL = "/dashboard";
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 type FieldErrors = {
   identifier?: string;
@@ -34,77 +30,56 @@ function inputClass(hasError: boolean) {
 
 export default function LoginForm() {
   const router = useRouter();
+  const { login } = useAuth();
 
-  // What the person has typed
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
 
-  // What the screen is showing
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Step 1: check the fields before we contact the server
+  // Validates required fields before contacting the server.
   function validate(): FieldErrors {
     const errors: FieldErrors = {};
-
     if (identifier.trim() === "") {
       errors.identifier = "Enter your email, mobile number or profile ID.";
     }
     if (password === "") {
       errors.password = "Enter your password.";
     }
-
     return errors;
   }
 
-  // Step 2: send the login request
+  // Submits credentials via AuthProvider and redirects on success.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
 
     const errors = validate();
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return; // stop here, show the errors
+    if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
-
     try {
-      const response = await fetch(`${API}/api/auth/login`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          password,
-          remember,
-        }),
-      });
-
-      if (response.ok) {
-        router.push(AFTER_LOGIN_URL);
-        return;
-      }
-
-      // 401 means the details were wrong. We don't say which one was wrong,
-      // so nobody can use this page to find out who has an account.
-      if (response.status === 401) {
-        setFormError("The details you entered don't match. Check them and try again.");
+      await login(identifier.trim(), password, remember);
+      router.push(AFTER_LOGIN_URL);
+      return;
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFormError(err.message);
       } else {
-        setFormError("Something went wrong on our side. Please try again in a moment.");
+        setFormError("We couldn't reach the server. Check your connection and try again.");
       }
-    } catch {
-      setFormError("We couldn't reach the server. Check your internet connection and try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
-      {/* Message for problems with the whole form */}
       {formError && (
         <div
           role="alert"
@@ -114,7 +89,6 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* Email, mobile or profile ID */}
       <div>
         <label htmlFor="identifier" className="mb-2 block text-sm font-medium">
           Email, mobile number or profile ID
@@ -140,7 +114,6 @@ export default function LoginForm() {
         )}
       </div>
 
-      {/* Password */}
       <div>
         <div className="mb-2 flex items-center justify-between">
           <label htmlFor="password" className="text-sm font-medium">
@@ -186,7 +159,6 @@ export default function LoginForm() {
         )}
       </div>
 
-      {/* Remember me */}
       <label className="flex items-center gap-3 text-sm">
         <input
           type="checkbox"
@@ -197,7 +169,6 @@ export default function LoginForm() {
         Keep me signed in on this device
       </label>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={loading}

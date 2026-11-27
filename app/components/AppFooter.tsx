@@ -20,12 +20,13 @@ const COLUMNS = [
     ],
   },
   {
-    heading: "Company",
+    heading: "Account & legal",
     links: [
-      { label: "About us", href: "/#how-it-works" },
-      { label: "Success stories", href: "/#stories" },
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
+      { label: "My profile", href: "/profile" },
+      { label: "Invoices", href: "/invoices" },
+      { label: "Privacy", href: "/privacy?in=app" },
+      { label: "Terms", href: "/terms?in=app" },
+      { label: "Refund policy", href: "/refund-policy?in=app" },
     ],
   },
 ];
@@ -35,7 +36,10 @@ export default function AppFooter() {
     <footer className="sm-foot">
       <div className="sm-foot__inner">
         <div className="sm-foot__brand">
-          <Link href="/dashboard" className="sm-foot__logo">Sammatham</Link>
+          <Link href="/dashboard" className="sm-foot__logo" aria-label="Sammatham">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-maroon.png" alt="Sammatham" className="sm-foot__logo-img" />
+          </Link>
           <p className="muted">
             Verified profiles and real people to help, for Kerala families at home and abroad.
           </p>

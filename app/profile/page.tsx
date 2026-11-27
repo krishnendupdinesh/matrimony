@@ -144,7 +144,7 @@ export default function ProfilePage() {
       body.append("primaryPhotoId", primaryId ?? "");
       photos.forEach((p) => p.file && body.append("photos", p.file, p.id));
       // TODO: point at your real endpoint
-      const res = await fetch("http://localhost:5000/api/profile", { method: "PUT", body, credentials: "include" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/profile`, { method: "PUT", body, credentials: "include" });
       if (!res.ok) throw new Error();
       setSaved(true);
     } catch {

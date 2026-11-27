@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import "../styles/dashboard.css";
 import NotificationDrawer, { SEED_NOTIFICATIONS } from "./NotificationDrawer";
+import ChatWidget from "./ChatWidget";
+import { useAuth } from "./AuthProvider";
 
 export type Member = {
   name: string;
@@ -42,23 +44,24 @@ const MENU = [
   { href: "/help", label: "Help & safety" },
 ];
 
-function NavbarInner({ member, name = "Krishnendu" }: NavbarProps) {
+function NavbarInner({ member, name }: NavbarProps) {
   const path = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false); // avatar menu
   const [menu, setMenu] = useState(false); // mobile menu
   const [bellOpen, setBellOpen] = useState(false); // notification drawer
-  const [notes, setNotes] = useState(SEED_NOTIFICATIONS); // TODO: load from API
+  const [notes, setNotes] = useState(SEED_NOTIFICATIONS); // TODO: load from API in Phase C
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const displayName = member?.name ?? name;
-  const unreadMessages = member?.unreadMessages ?? 2;
+  const displayName = member?.name ?? user?.name ?? name ?? "Member";
+  const unreadMessages = member?.unreadMessages ?? user?.unreadMessages ?? 0;
   const unread = notes.filter((n) => !n.read).length;
 
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await fetch("/api/logout", { method: "POST", credentials: "include" });
+      await logout();
     } finally {
       setOpen(false);
       setLoggingOut(false);
@@ -71,7 +74,10 @@ function NavbarInner({ member, name = "Krishnendu" }: NavbarProps) {
     <>
       <header className="sm-nav">
         <div className="sm-nav__inner">
-          <Link href="/dashboard" className="sm-logo">Sammatham</Link>
+          <Link href="/dashboard" className="sm-logo" aria-label="Sammatham">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-maroon.png" alt="Sammatham" className="sm-logo__img" />
+          </Link>
 
           <nav className={`sm-links ${menu ? "is-open" : ""}`} aria-label="Main">
             {LINKS.map((l) => {
@@ -141,6 +147,7 @@ function NavbarInner({ member, name = "Krishnendu" }: NavbarProps) {
         </div>
       </header>
       <NotificationDrawer open={bellOpen} onClose={() => setBellOpen(false)} items={notes} setItems={setNotes} />
+      <ChatWidget />
     </>
   );
 }

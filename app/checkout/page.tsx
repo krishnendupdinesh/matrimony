@@ -140,7 +140,7 @@ function Checkout() {
 
           <section className="card co__sec">
             <label className="check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-              <span>I agree to the <Link href="/terms" className="link">Terms</Link> and <Link href="/refund-policy" className="link">Refund policy</Link>. The plan does not renew automatically.</span></label>
+              <span>I agree to the <Link href="/terms?in=app" className="link">Terms</Link> and <Link href="/refund-policy?in=app" className="link">Refund policy</Link>. The plan does not renew automatically.</span></label>
           </section>
         </div>
 

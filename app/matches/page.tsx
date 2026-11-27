@@ -68,7 +68,7 @@ export default function MatchesPage() {
   const apply = async () => {
     setPrefs(draft); setShowFilters(false);
     try { // TODO: point at your real endpoint
-      await fetch("http://localhost:5000/api/preferences", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft), credentials: "include" });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/preferences`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft), credentials: "include" });
       setSaved(true);
     } catch { setSaved(false); }
   };

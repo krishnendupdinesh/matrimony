@@ -332,9 +332,11 @@ function HeaderInner() {
           {/* Brand */}
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-display shrink-0 text-2xl text-[var(--ivory)] transition-opacity hover:opacity-90"
+            className="inline-flex shrink-0 items-center transition-opacity hover:opacity-90"
+            aria-label={BRAND}
           >
-            {BRAND}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-white.png" alt={BRAND} className="h-12 w-auto" />
           </Link>
 
           {/* Center navigation */}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Gloock, Jost } from "next/font/google";
+import { AuthProvider } from "./components/AuthProvider";
 import "./globals.css";
 
 // Merisca (your chosen font) is loaded in globals.css from /public/fonts.
@@ -29,7 +30,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${gloock.variable} ${jost.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

@@ -32,7 +32,9 @@ export default function AdminLogin() {
   return (
     <main className="al">
       <form className="card al__box" onSubmit={submit}>
-        <h1>Sammatham Admin</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-maroon.png" alt="Sammatham" className="al__logo" />
+        <h1>Admin sign in</h1>
         <p className="muted">Authorised staff only.</p>
         <label className="field">
           <span>Email</span>

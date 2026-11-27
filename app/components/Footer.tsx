@@ -1,10 +1,36 @@
+import Link from "next/link";
+
 const BRAND = "Sammatham"; // keep this the same everywhere
 const COPYRIGHT_YEAR = 2026; // fixed value: new Date() is not allowed during prerender with cacheComponents
 
 const footerColumns = [
-  { heading: "Find a match", links: ["Brides", "Grooms", "By community", "Living abroad"] },
-  { heading: "Help", links: ["How it works", "Safety tips", "Talk to an advisor", "Contact us"] },
-  { heading: "Company", links: ["About us", "Success stories", "Privacy", "Terms"] },
+  {
+    heading: "Find a match",
+    links: [
+      { label: "Brides", href: "/register" },
+      { label: "Grooms", href: "/register" },
+      { label: "By community", href: "/#browse" },
+      { label: "Living abroad", href: "/#browse" },
+    ],
+  },
+  {
+    heading: "Help",
+    links: [
+      { label: "How it works", href: "/#how-it-works" },
+      { label: "Safety tips", href: "/privacy" },
+      { label: "Refund policy", href: "/refund-policy" },
+      { label: "Sign in", href: "/login" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "About us", href: "/#how-it-works" },
+      { label: "Success stories", href: "/#stories" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+    ],
+  },
 ];
 
 export default function Footer() {
@@ -14,7 +40,8 @@ export default function Footer() {
     <footer id="help" className="border-t border-white/15 bg-[var(--wine-deep)] py-14">
       <div className={`${container} grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]`}>
         <div>
-          <p className="font-display text-3xl">{BRAND}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-white.png" alt={BRAND} className="h-16 w-auto" />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/70">
             Verified profiles and real people to help, for Kerala families at home and abroad.
           </p>
@@ -25,10 +52,10 @@ export default function Footer() {
             <h4 className="font-display text-lg">{column.heading}</h4>
             <ul className="mt-4 space-y-2 text-sm text-white/70">
               {column.links.map((link) => (
-                <li key={link}>
-                  <a href="#" className="hover:text-white">
-                    {link}
-                  </a>
+                <li key={link.label}>
+                  <Link href={link.href} className="hover:text-white">
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -113,9 +113,14 @@
   gap: 28px;
 }
 .sm-logo {
-  font: 700 19px Inter, system-ui, sans-serif;
-  color: var(--maroon);
-  letter-spacing: -0.3px;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.sm-logo__img {
+  height: 40px;
+  width: auto;
+  display: block;
 }
 .sm-links {
   display: flex;
@@ -486,9 +491,13 @@
   gap: 32px;
 }
 .sm-foot__logo {
-  font: 700 22px Inter, system-ui, sans-serif;
-  color: var(--maroon);
-  letter-spacing: -0.3px;
+  display: inline-flex;
+  align-items: center;
+}
+.sm-foot__logo-img {
+  height: 54px;
+  width: auto;
+  display: block;
 }
 .sm-foot__brand p {
   margin: 10px 0 0;

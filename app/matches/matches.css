@@ -9,7 +9,14 @@
 .mt__layout{display:grid;grid-template-columns:295px 1fr;gap:20px;align-items:start}
 
 /* Preferences */
-.prefs{position:sticky;top:76px;display:grid;gap:12px;max-height:calc(100vh - 96px);overflow:auto}
+.prefs{position:sticky;top:76px;display:grid;gap:12px;max-height:calc(100vh - 96px);overflow-y:auto;overflow-x:hidden}
+.prefs::-webkit-scrollbar{width:6px}
+.prefs::-webkit-scrollbar-track{background:transparent;margin:10px 0}
+.prefs::-webkit-scrollbar-thumb{background:rgba(107,21,48,.16);border-radius:99px}
+.prefs:hover::-webkit-scrollbar-thumb{background:rgba(107,21,48,.32)}
+.prefs::-webkit-scrollbar-thumb:hover{background:rgba(107,21,48,.52)}
+.prefs::-webkit-scrollbar-button{display:none}
+@supports not selector(::-webkit-scrollbar){.prefs{scrollbar-width:thin;scrollbar-color:rgba(107,21,48,.22) transparent}}
 .prefs h2{font:700 16px Inter,system-ui,sans-serif}
 .pf-row{display:grid;gap:5px;border:0;padding:0;margin:0;min-width:0}
 .pf-row label,.pf-row legend{font:600 12px Inter,system-ui,sans-serif;padding:0}

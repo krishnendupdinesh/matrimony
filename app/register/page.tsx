@@ -17,8 +17,9 @@ export default function RegisterPage() {
         <div className="pointer-events-none absolute inset-0 bg-[url('/register-bg.jpg')] bg-cover bg-center" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[var(--wine-deep)]/80 via-[var(--wine-deep)]/45 to-[var(--wine-deep)]/90" />
 
-        <Link href="/" className="font-display relative text-3xl">
-          {BRAND}
+        <Link href="/" className="relative inline-flex w-fit items-center" aria-label={BRAND}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-white.png" alt={BRAND} className="h-14 w-auto" />
         </Link>
 
         <div className="relative max-w-md">
@@ -42,8 +43,9 @@ export default function RegisterPage() {
 
         <div className="relative flex flex-1 items-start justify-center px-5 py-8 sm:items-center sm:px-6 sm:py-12">
           <div className="w-full max-w-md">
-            <Link href="/" className="font-display mb-6 block text-3xl lg:hidden">
-              {BRAND}
+            <Link href="/" className="mb-6 inline-flex items-center lg:hidden" aria-label={BRAND}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-maroon.png" alt={BRAND} className="h-12 w-auto" />
             </Link>
             <h1 className="font-display text-4xl sm:text-5xl">Create your profile</h1>
             <p className="mb-6 mt-3 text-black/65">It takes about five minutes.</p>
