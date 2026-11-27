@@ -1,6 +1,6 @@
 "use client";
 // app/profile/[id]/page.tsx  — another member's profile (your own is app/profile/page.tsx)
-import { useState, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Navbar from "../../components/AppNavbar";
@@ -50,7 +50,7 @@ const MEMBERS: Record<string, Member> = {
 const Row = ({ label, value }: { label: string; value: ReactNode }) => (<div className="vrow"><dt>{label}</dt><dd>{value || "—"}</dd></div>);
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (<section className="card vsec"><h2>{title}</h2><dl>{children}</dl></section>);
 
-export default function ViewProfilePage() {
+function ViewProfileContent() {
   const { id } = useParams<{ id: string }>();
   const m = MEMBERS[id];
   const [photoIx, setPhotoIx] = useState(0);
@@ -61,17 +61,13 @@ export default function ViewProfilePage() {
 
   if (!m) {
     return (
-      <div className="dash-page">
-        <Navbar name="Krishnendu" />
-        <main className="vp">
-          <div className="card vp__missing">
-            <h1>Profile not available</h1>
-            <p className="muted">This profile may have been hidden or removed, or the link is wrong.</p>
-            <Link href="/search" className="btn btn--solid">Back to search</Link>
-          </div>
-        </main>
-        <AppFooter />
-      </div>
+      <main className="vp">
+        <div className="card vp__missing">
+          <h1>Profile not available</h1>
+          <p className="muted">This profile may have been hidden or removed, or the link is wrong.</p>
+          <Link href="/search" className="btn btn--solid">Back to search</Link>
+        </div>
+      </main>
     );
   }
 
@@ -97,8 +93,6 @@ export default function ViewProfilePage() {
   const toggleBlock = () => { setBlocked(!blocked); setMenu(false); /* TODO: POST /api/block */ };
 
   return (
-    <div className="dash-page">
-      <Navbar name="Krishnendu" />
       <main className="vp">
         <nav className="crumbs" aria-label="Breadcrumb"><Link href="/search" className="link">← Back to search</Link></nav>
 
@@ -191,6 +185,16 @@ export default function ViewProfilePage() {
           </aside>
         </div>
       </main>
+  );
+}
+
+export default function ViewProfilePage() {
+  return (
+    <div className="dash-page">
+      <Navbar name="Krishnendu" />
+      <Suspense fallback={<main className="vp"><p className="muted">Loading…</p></main>}>
+        <ViewProfileContent />
+      </Suspense>
       <AppFooter />
     </div>
   );
