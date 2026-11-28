@@ -293,7 +293,7 @@ export default function Members() {
                   )}
                 </dd>
               </div>
-              <div><dt>Email</dt><dd>{selected.email}</dd></div>
+              <div><dt>Email</dt><dd>{selected.email && !selected.email.endsWith("@member.sammatham.in") ? selected.email : "Not provided"}</dd></div>
               <div><dt>Gender</dt><dd>{selected.gender}</dd></div>
               <div><dt>Religion / Community</dt><dd>{selected.religion}{selected.community ? ` · ${selected.community}` : ""}</dd></div>
               <div><dt>Location</dt><dd>{[selected.place, selected.district, selected.state].filter(Boolean).join(", ") || "—"}</dd></div>

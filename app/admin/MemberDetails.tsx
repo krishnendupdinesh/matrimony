@@ -85,7 +85,7 @@ export default function MemberDetails({ p }: { p: FullProfile }) {
         title="Contact & address (admin view)"
         rows={[
           ["Mobile", p.mobile],
-          ["Email", p.email],
+          ["Email", p.email && !p.email.endsWith("@member.sammatham.in") ? p.email : "Not provided"],
           ["State / country", p.state],
           ["District", p.district],
           ["Place / town", p.place],

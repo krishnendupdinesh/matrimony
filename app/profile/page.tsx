@@ -38,7 +38,7 @@ const MAX_PHOTOS = 6;
 
 const initial = {
   // Basic
-  profileFor: "Myself", name: "", gender: "", dob: "", height: "", bodyType: "", maritalStatus: "Never married", motherTongue: "Malayalam",
+  profileFor: "Myself", name: "", email: "", gender: "", dob: "", height: "", bodyType: "", maritalStatus: "Never married", motherTongue: "Malayalam",
   // Location
   state: "Kerala", district: "", otherDistrict: "", place: "", houseName: "", pincode: "", landmark: "", mapLink: "", addressVisibility: "Accepted matches only",
   // Community
@@ -112,10 +112,12 @@ export default function ProfilePage() {
         const timeMatch = (p.timeOfBirth || "").match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
         const isKeralaState = (p.state || "Kerala") === "Kerala";
         const existingGender = p.gender === "female" ? "Female" : p.gender === "male" ? "Male" : "";
+        const realEmail = p.email && !p.email.endsWith("@member.sammatham.in") ? p.email : "";
         setGenderLocked(Boolean(existingGender));
         setForm({
           profileFor: p.profileFor || "Myself",
           name: p.name || "",
+          email: realEmail,
           gender: existingGender,
           dob: dobStr,
           height: p.heightCm ? String(p.heightCm) : "",
@@ -208,8 +210,12 @@ export default function ProfilePage() {
 
   const save = async () => {
     setError("");
-    if (!form.name.trim() || (!genderLocked && !form.gender) || !form.dob || !form.place.trim()) {
-      setError("Please fill in your name, gender, date of birth and place.");
+    if (!form.name.trim() || !form.email.trim() || (!genderLocked && !form.gender) || !form.dob || !form.place.trim()) {
+      setError("Please fill in your name, email, gender, date of birth and place.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      setError("Please enter a valid email address.");
       return;
     }
     if (form.pincode && !/^\d{6}$/.test(form.pincode)) { setError("Pincode must be 6 digits."); return; }
@@ -219,6 +225,7 @@ export default function ProfilePage() {
       const payload = {
         profileFor: form.profileFor,
         name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
         ...(!genderLocked && form.gender ? { gender: form.gender.toLowerCase() } : {}),
         dob: form.dob,
         heightCm: form.height ? Number(form.height) : undefined,
@@ -336,6 +343,9 @@ export default function ProfilePage() {
           <div className="grid">
             <Field label="Profile created for">{select("profileFor", ["Myself","Son","Daughter","Brother","Sister","Relative"])}</Field>
             <Field label="Full name *"><input value={form.name} onChange={set("name")} /></Field>
+            <Field label="Email address *" hint="Used for notifications and account recovery">
+              <input type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
+            </Field>
             {genderLocked ? (
               <Field label="Gender" hint="Locked after registration. Contact support to change.">
                 <input value={form.gender || "—"} disabled readOnly />
