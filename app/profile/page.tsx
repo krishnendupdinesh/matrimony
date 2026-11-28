@@ -205,7 +205,7 @@ export default function ProfilePage() {
 
   const save = async () => {
     setError("");
-    if (!form.name.trim() || !form.gender || !form.dob || !form.place.trim()) { setError("Please fill in your name, gender, date of birth and place."); return; }
+    if (!form.name.trim() || !form.dob || !form.place.trim()) { setError("Please fill in your name, date of birth and place."); return; }
     if (form.pincode && !/^\d{6}$/.test(form.pincode)) { setError("Pincode must be 6 digits."); return; }
     setSaving(true);
     try {
@@ -213,7 +213,6 @@ export default function ProfilePage() {
       const payload = {
         profileFor: form.profileFor,
         name: form.name.trim(),
-        gender: form.gender.toLowerCase(),
         dob: form.dob,
         heightCm: form.height ? Number(form.height) : undefined,
         bodyType: form.bodyType,
@@ -330,7 +329,9 @@ export default function ProfilePage() {
           <div className="grid">
             <Field label="Profile created for">{select("profileFor", ["Myself","Son","Daughter","Brother","Sister","Relative"])}</Field>
             <Field label="Full name *"><input value={form.name} onChange={set("name")} /></Field>
-            <Field label="Gender *">{select("gender", ["Male","Female"], "Select gender")}</Field>
+            <Field label="Gender" hint="Locked after registration. Contact support to change.">
+              <input value={form.gender || "—"} disabled readOnly />
+            </Field>
             <Field label="Date of birth *"><input type="date" value={form.dob} onChange={set("dob")} /></Field>
             <Field label="Height (cm)"><input type="number" min={120} max={220} value={form.height} onChange={set("height")} /></Field>
             <Field label="Body type">{select("bodyType", ["Slim","Average","Athletic","Heavy"], "Select body type")}</Field>

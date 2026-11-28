@@ -1,68 +1,145 @@
 "use client";
-// app/shortlist/page.tsx
-import { useEffect, useMemo, useRef, useState } from "react";
+// app/shortlist/page.tsx — live shortlisted profiles powered by GET/POST/DELETE /api/shortlist.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { apiFetch, ApiError } from "@/lib/api";
+import type { MemberCard } from "@/lib/types";
+import { useAuth } from "../components/AuthProvider";
 import Navbar from "../components/AppNavbar";
 import AppFooter from "../components/AppFooter";
-import "../styles/dashboard.css";  // shared theme
-import "../matches/matches.css";     // reuses card styles
+import "../styles/dashboard.css";
+import "../matches/matches.css";
 import "./shortlist.css";
 
-type Status = "none" | "sent" | "accepted" | "declined";
-type Item = {
-  id: string; name: string; age: number; height: number; religion: string; community: string; district: string; place: string;
-  occupation: string; education: string; star: string; verified?: boolean; status: Status; addedDaysAgo: number; note: string;
+type ShortlistItem = MemberCard & {
+  note?: string;
+  shortlistedAt?: string;
 };
 
-// TODO: replace with GET /api/shortlist
-const SEED: Item[] = [
-  { id: "SM100231", name: "Divya K.", age: 26, height: 160, religion: "Hindu", community: "Nair", district: "Ernakulam", place: "Aluva", occupation: "Accountant", education: "CA", star: "Rohini", verified: true, status: "accepted", addedDaysAgo: 1, note: "Family is in Aluva. Parents free to talk on weekends." },
-  { id: "SM100245", name: "Anjali M.", age: 27, height: 163, religion: "Hindu", community: "Ezhava", district: "Thrissur", place: "Chalakudy", occupation: "Software engineer", education: "B.Tech", star: "Uthram", verified: true, status: "sent", addedDaysAgo: 3, note: "" },
-  { id: "SM100318", name: "Meera S.", age: 28, height: 165, religion: "Hindu", community: "Nair", district: "Thiruvananthapuram", place: "Kazhakkoottam", occupation: "Teacher", education: "M.Ed", star: "Makam", status: "none", addedDaysAgo: 5, note: "Check dosham with astrologer first." },
-  { id: "SM100412", name: "Aswathy B.", age: 26, height: 168, religion: "Hindu", community: "Ezhava", district: "Ernakulam", place: "Tripunithura", occupation: "Research scientist", education: "M.Tech", star: "Ayilyam", verified: true, status: "none", addedDaysAgo: 8, note: "" },
-  { id: "SM100455", name: "Reshma T.", age: 31, height: 157, religion: "Hindu", community: "Nair", district: "Palakkad", place: "Ottapalam", occupation: "Bank officer", education: "B.Com", star: "Chithira", status: "declined", addedDaysAgo: 12, note: "" },
-];
-
-const TABS: { id: "all" | Status; label: string }[] = [
-  { id: "all", label: "All" }, { id: "none", label: "Not contacted" }, { id: "sent", label: "Interest sent" }, { id: "accepted", label: "Accepted" },
-];
-const added = (n: number) => (n === 0 ? "Added today" : n === 1 ? "Added yesterday" : `Added ${n} days ago`);
+function formatAdded(iso?: string): string {
+  if (!iso) return "Shortlisted";
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return "Shortlisted";
+  const days = Math.max(0, Math.floor((Date.now() - ts) / 86400000));
+  if (days === 0) return "Added today";
+  if (days === 1) return "Added yesterday";
+  return `Added ${days} days ago`;
+}
 
 export default function ShortlistPage() {
-  const [items, setItems] = useState<Item[]>(SEED);
-  const [tab, setTab] = useState<"all" | Status>("all");
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  const [items, setItems] = useState<ShortlistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [sort, setSort] = useState("recent");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
-  const [undo, setUndo] = useState<{ item: Item; index: number } | null>(null);
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const counts = (t: "all" | Status) => (t === "all" ? items.length : items.filter((i) => i.status === t).length);
-  const shown = useMemo(() => items
-    .filter((i) => (tab === "all" || i.status === tab) && i.name.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => sort === "ageAsc" ? a.age - b.age : sort === "ageDesc" ? b.age - a.age : a.addedDaysAgo - b.addedDaysAgo), [items, tab, sort, query]);
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [authLoading, user, router]);
 
-  const remove = (id: string) => {
-    const index = items.findIndex((i) => i.id === id);
-    setUndo({ item: items[index], index });
-    setItems(items.filter((i) => i.id !== id)); // TODO: DELETE /api/shortlist/:id
+  const say = (msg: string) => {
+    setToast(msg);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setUndo(null), 6000);
+    timer.current = setTimeout(() => setToast(""), 4000);
   };
-  const restore = () => {
-    if (!undo) return;
-    const next = [...items]; next.splice(undo.index, 0, undo.item);
-    setItems(next); setUndo(null); // TODO: POST /api/shortlist
+
+  const loadShortlist = useCallback(async () => {
+    if (!user || user.status !== "approved") {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiFetch<{ shortlist: ShortlistItem[] }>("/api/shortlist");
+      setItems(data.shortlist || []);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load shortlist.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadShortlist();
+  }, [loadShortlist]);
+
+  const shown = useMemo(
+    () =>
+      items
+        .filter((i) => i.name.toLowerCase().includes(query.toLowerCase()))
+        .sort((a, b) => {
+          if (sort === "ageAsc") return (a.age ?? 99) - (b.age ?? 99);
+          if (sort === "ageDesc") return (b.age ?? 0) - (a.age ?? 0);
+          return new Date(b.shortlistedAt || 0).getTime() - new Date(a.shortlistedAt || 0).getTime();
+        }),
+    [items, sort, query],
+  );
+
+  const remove = async (item: ShortlistItem) => {
+    try {
+      await apiFetch(`/api/shortlist/${item.id}`, { method: "DELETE" });
+      setItems((prev) => prev.filter((x) => x.id !== item.id));
+      say(`${item.name} removed from shortlist.`);
+    } catch (err) {
+      say(err instanceof ApiError ? err.message : "Could not remove profile.");
+    }
   };
-  const sendInterest = (id: string) => setItems((l) => l.map((i) => (i.id === id ? { ...i, status: "sent" } : i))); // TODO: POST /api/interests
-  const startNote = (i: Item) => { setEditing(i.id); setNoteDraft(i.note); };
-  const saveNote = (id: string) => { setItems((l) => l.map((i) => (i.id === id ? { ...i, note: noteDraft.trim() } : i))); setEditing(null); /* TODO: PUT /api/shortlist/:id/note */ };
+
+  const sendInterest = async (item: ShortlistItem) => {
+    try {
+      await apiFetch("/api/interests", { method: "POST", body: { receiverId: item.id } });
+      setSentIds((prev) => new Set(prev).add(item.id));
+      say(`Interest sent to ${item.name}.`);
+    } catch (err) {
+      say(err instanceof ApiError ? err.message : "Could not send interest.");
+    }
+  };
+
+  const startNote = (i: ShortlistItem) => {
+    setEditing(i.id);
+    setNoteDraft(i.note || "");
+  };
+
+  const saveNote = async (id: string) => {
+    const clean = noteDraft.trim();
+    try {
+      await apiFetch("/api/shortlist", { method: "POST", body: { targetUserId: id, note: clean } });
+      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, note: clean } : i)));
+      setEditing(null);
+      say("Note saved.");
+    } catch (err) {
+      say(err instanceof ApiError ? err.message : "Could not save note.");
+    }
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div className="dash-page">
+        <Navbar />
+        <main className="mt">
+          <p className="muted">Loading…</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dash-page">
-      <Navbar name="Krishnendu" />
+      <Navbar name={user.name} />
       <main className="mt">
         <header className="mt__head">
           <div>
@@ -70,73 +147,143 @@ export default function ShortlistPage() {
             <p className="muted">Profiles you saved to look at again. Only you can see this list and your notes.</p>
           </div>
           <div className="mt__tools">
-            <input className="sl-search" type="search" placeholder="Search by name" aria-label="Search shortlist" value={query} onChange={(e) => setQuery(e.target.value)} />
-            <label className="mini">Sort by
+            <input
+              className="sl-search"
+              type="search"
+              placeholder="Search by name"
+              aria-label="Search shortlist"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <label className="mini">
+              Sort by
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="recent">Recently added</option><option value="ageAsc">Age: low to high</option><option value="ageDesc">Age: high to low</option>
-              </select></label>
+                <option value="recent">Recently added</option>
+                <option value="ageAsc">Age: low to high</option>
+                <option value="ageDesc">Age: high to low</option>
+              </select>
+            </label>
           </div>
         </header>
 
-        <div className="tabs" role="tablist" aria-label="Filter shortlist">
-          {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label} ({counts(t.id)})</button>
-          ))}
-        </div>
+        {error && (
+          <div className="card empty" role="alert">
+            <p style={{ color: "#B3261E" }}>{error}</p>
+          </div>
+        )}
 
-        {items.length === 0 ? (
+        {user.status !== "approved" ? (
+          <div className="card empty">
+            <h2>Profile pending approval</h2>
+            <p className="muted">You can shortlist matches once your profile is approved.</p>
+          </div>
+        ) : loading ? (
+          <div className="card empty">
+            <p className="muted">Loading shortlist…</p>
+          </div>
+        ) : items.length === 0 ? (
           <div className="card empty">
             <h2>Your shortlist is empty</h2>
             <p className="muted">Tap Shortlist on any profile to keep it here for later.</p>
-            <div className="empty__btns"><Link href="/matches" className="btn btn--solid">See your matches</Link><Link href="/search" className="btn btn--outline">Search profiles</Link></div>
+            <div className="empty__btns">
+              <Link href="/matches" className="btn btn--solid">
+                See your matches
+              </Link>
+              <Link href="/search" className="btn btn--outline">
+                Search profiles
+              </Link>
+            </div>
           </div>
         ) : shown.length === 0 ? (
-          <div className="card empty"><h2>No profiles here</h2><p className="muted">Try another tab or clear the search.</p></div>
+          <div className="card empty">
+            <h2>No profiles match your search</h2>
+            <p className="muted">Try clearing the search box.</p>
+          </div>
         ) : (
           <div className="cards sl-cards">
             {shown.map((p) => (
               <article key={p.id} className="card mcard">
                 <Link href={`/profile/${p.id}`} className="mcard__link">
                   <div className="mcard__photo">
-                    <span>{p.name[0]}</span>
-                    {p.verified && <i className="ver">Verified</i>}
-                    <b className="pct">{added(p.addedDaysAgo)}</b>
+                    {p.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.avatarUrl}
+                        alt={p.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <span>{p.name[0]?.toUpperCase() || "M"}</span>
+                    )}
+                    <b className="pct">{formatAdded(p.shortlistedAt)}</b>
                   </div>
-                  <h3>{p.name}, {p.age}</h3>
-                  <p className="muted">ID {p.id}</p>
-                  <p className="muted">{p.occupation} · {p.education}</p>
-                  <p className="muted">{p.place}, {p.district} · {p.height} cm</p>
-                  <p className="muted">{p.religion}, {p.community}{p.star !== "—" ? ` · ${p.star}` : ""}</p>
+                  <h3>
+                    {p.name}
+                    {p.age ? `, ${p.age}` : ""}
+                  </h3>
+                  <p className="muted">ID {p.profileCode || p.id}</p>
+                  <p className="muted">{[p.occupation, p.education].filter(Boolean).join(" · ") || "Member"}</p>
+                  <p className="muted">
+                    {[p.place, p.district].filter(Boolean).join(", ") || p.state}
+                    {p.heightCm ? ` · ${p.heightCm} cm` : ""}
+                  </p>
+                  <p className="muted">{[p.religion, p.community, p.star].filter(Boolean).join(" · ")}</p>
                 </Link>
 
-                {/* Private note */}
                 {editing === p.id ? (
                   <div className="note-edit">
-                    <textarea rows={3} maxLength={300} aria-label={`Private note about ${p.name}`} value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Add a private note" autoFocus />
-                    <div><button className="btn btn--solid btn--sm" onClick={() => saveNote(p.id)}>Save note</button> <button className="btn btn--outline btn--sm" onClick={() => setEditing(null)}>Cancel</button></div>
+                    <textarea
+                      rows={3}
+                      maxLength={300}
+                      aria-label={`Private note about ${p.name}`}
+                      value={noteDraft}
+                      onChange={(e) => setNoteDraft(e.target.value)}
+                      placeholder="Add a private note"
+                      autoFocus
+                    />
+                    <div>
+                      <button type="button" className="btn btn--solid btn--sm" onClick={() => saveNote(p.id)}>
+                        Save note
+                      </button>{" "}
+                      <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(null)}>
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button className="note-view" onClick={() => startNote(p)}>
-                    {p.note ? <><small>Your note</small>{p.note}</> : <span className="muted">+ Add a private note</span>}
+                  <button type="button" className="note-view" onClick={() => startNote(p)}>
+                    {p.note ? (
+                      <>
+                        <small>Your note</small>
+                        {p.note}
+                      </>
+                    ) : (
+                      <span className="muted">+ Add a private note</span>
+                    )}
                   </button>
                 )}
 
                 <div className="mcard__btns">
-                  {p.status === "none" && <button className="btn btn--solid" onClick={() => sendInterest(p.id)}>Send interest</button>}
-                  {p.status === "sent" && <button className="btn btn--outline" disabled>Interest sent</button>}
-                  {p.status === "accepted" && <Link href="/messages" className="btn btn--solid">Message</Link>}
-                  {p.status === "declined" && <button className="btn btn--outline" disabled>Not interested</button>}
-                  <button className="btn btn--outline" onClick={() => remove(p.id)}>Remove</button>
+                  <button
+                    type="button"
+                    className={`btn ${sentIds.has(p.id) ? "btn--outline" : "btn--solid"}`}
+                    disabled={sentIds.has(p.id)}
+                    onClick={() => sendInterest(p)}
+                  >
+                    {sentIds.has(p.id) ? "Interest sent" : "Send interest"}
+                  </button>
+                  <button type="button" className="btn btn--outline" onClick={() => remove(p)}>
+                    Remove
+                  </button>
                 </div>
               </article>
             ))}
           </div>
         )}
 
-        {undo && (
+        {toast && (
           <div className="toast" role="status">
-            <span>{undo.item.name} removed from shortlist</span>
-            <button onClick={restore}>Undo</button>
+            {toast}
           </div>
         )}
       </main>

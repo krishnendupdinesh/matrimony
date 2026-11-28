@@ -25,12 +25,14 @@
 .nt{border-bottom:1px solid var(--line)}
 .nt--new{background:#FCF4F6}
 .nt__main{display:flex;gap:12px;align-items:flex-start;padding:14px 20px}
+.nt__main--btn{width:100%;border:0;background:none;text-align:left;cursor:pointer;font:inherit;color:inherit}
 .nt__main:hover{background:var(--tint)}
 .nt__ic{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:var(--tint);color:var(--maroon)}
 .nt__ic--accepted{background:#E6F3EC;color:var(--ok)}
 .nt__ic--plan{background:#FFF1D6;color:#9A6200}
 .nt__body{flex:1;display:grid;gap:3px;min-width:0}
 .nt__text{font-size:14px;line-height:1.4}
+.nt__msg{font-size:13px;line-height:1.4;color:var(--muted);word-break:break-word}
 .nt--new .nt__text{font-weight:600}
 .nt__body small{color:var(--muted);font-size:12px}
 .nt__dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--maroon);margin-top:6px}

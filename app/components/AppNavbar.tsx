@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import "../styles/dashboard.css";
-import NotificationDrawer, { SEED_NOTIFICATIONS } from "./NotificationDrawer";
+import NotificationDrawer from "./NotificationDrawer";
 import ChatWidget from "./ChatWidget";
 import { useAuth } from "./AuthProvider";
+import { useNotifications } from "@/hooks/useNotifications";
+import { disconnectSocket } from "@/lib/socket";
 
 export type Member = {
   name: string;
@@ -51,16 +53,26 @@ function NavbarInner({ member, name }: NavbarProps) {
   const [open, setOpen] = useState(false); // avatar menu
   const [menu, setMenu] = useState(false); // mobile menu
   const [bellOpen, setBellOpen] = useState(false); // notification drawer
-  const [notes, setNotes] = useState(SEED_NOTIFICATIONS); // TODO: load from API in Phase C
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationsLoading,
+    error: notificationsError,
+    markRead,
+    markAllRead,
+    refresh: refreshNotifications,
+  } = useNotifications(Boolean(user));
 
   const displayName = member?.name ?? user?.name ?? name ?? "Member";
   const unreadMessages = member?.unreadMessages ?? user?.unreadMessages ?? 0;
-  const unread = notes.filter((n) => !n.read).length;
+  const badgeText = unreadCount > 9 ? "9+" : String(unreadCount);
 
   async function handleLogout() {
     setLoggingOut(true);
     try {
+      disconnectSocket();
       await logout();
     } finally {
       setOpen(false);
@@ -99,14 +111,14 @@ function NavbarInner({ member, name }: NavbarProps) {
             <button
               type="button"
               className="sm-bell"
-              aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+              aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
               aria-haspopup="dialog"
               onClick={() => setBellOpen(true)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M18 8a6 6 0 10-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 20a2 2 0 01-3.4 0" />
               </svg>
-              {unread > 0 && <span className="sm-dot sm-dot--abs">{unread}</span>}
+              {unreadCount > 0 && <span className="sm-dot sm-dot--abs">{badgeText}</span>}
             </button>
             <Link href="/plans" className="btn btn--solid">Upgrade</Link>
 
@@ -145,7 +157,17 @@ function NavbarInner({ member, name }: NavbarProps) {
           </div>
         </div>
       </header>
-      <NotificationDrawer open={bellOpen} onClose={() => setBellOpen(false)} items={notes} setItems={setNotes} />
+      <NotificationDrawer
+        open={bellOpen}
+        onClose={() => setBellOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        loading={notificationsLoading}
+        error={notificationsError}
+        onMarkRead={markRead}
+        onMarkAllRead={markAllRead}
+        onRetry={refreshNotifications}
+      />
       <ChatWidget />
     </>
   );
