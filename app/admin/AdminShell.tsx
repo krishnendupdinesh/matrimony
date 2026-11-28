@@ -21,6 +21,7 @@ const NAV: NavItem[] = [
   { href: "/admin/reports", label: "Reports", permission: "support.manage" },
   { href: "/admin/support", label: "Support tickets", permission: "support.manage" },
   { href: "/admin/payments", label: "Payments", permission: "payments.view" },
+  { href: "/admin/plans", label: "Plans", permission: "plans.manage" },
   { href: "/admin/coupons", label: "Coupons", permission: "coupons.manage" },
   { href: "/admin/content", label: "Content", permission: "content.manage" },
   { href: "/admin/reviews", label: "Reviews", permission: "content.manage" },
@@ -75,11 +76,11 @@ function AdminShellInner({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await adminApiFetch("/api/admin/logout", { method: "POST" }).catch(() => {});
     setAdmin(null);
-    router.replace("/admin/login");
+    window.location.href = "/admin/login";
   };
 
   if (isLogin) return <>{children}</>;
-  if (!admin && checkedPath !== path) {
+  if (!admin || checkedPath !== path) {
     return <p className="ad-loading muted">Checking your session…</p>;
   }
 

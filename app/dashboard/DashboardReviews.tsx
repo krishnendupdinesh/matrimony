@@ -6,6 +6,7 @@ import type { ReviewItem } from "@/lib/types";
 
 export default function DashboardReviews({ defaultName = "" }: { defaultName?: string }) {
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
   const [name, setName] = useState(defaultName);
@@ -25,9 +26,14 @@ export default function DashboardReviews({ defaultName = "" }: { defaultName?: s
     let active = true;
     apiFetch<{ reviews: ReviewItem[] }>("/api/content/reviews")
       .then((d) => {
-        if (active && Array.isArray(d.reviews)) setReviews(d.reviews);
+        if (active && Array.isArray(d.reviews)) {
+          setReviews(d.reviews);
+        }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoadingReviews(false);
+      });
     return () => {
       active = false;
     };
@@ -183,30 +189,60 @@ export default function DashboardReviews({ defaultName = "" }: { defaultName?: s
         </form>
       )}
 
-      {reviews.length > 0 && (
-        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+      {loadingReviews ? (
+        <p className="muted">Loading reviews…</p>
+      ) : reviews.length === 0 ? (
+        <div className="card" style={{ padding: 18 }}>
+          <p className="muted">No published reviews yet. Be the first to share your experience!</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))" }}>
           {reviews.slice(0, 6).map((r) => (
-            <article key={r.id} className="card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
-              <div>
-                <div style={{ color: "#C9A45C", fontSize: 14, marginBottom: 6 }}>
-                  {"★".repeat(r.rating)}{"☆".repeat(Math.max(0, 5 - r.rating))}
-                </div>
-                <p style={{ fontSize: 13.5, lineHeight: 1.5 }}>&ldquo;{r.comment}&rdquo;</p>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
-                {r.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+            <article
+              key={r.id}
+              className="card"
+              style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}
+            >
+              {r.photoUrl && (
+                <div style={{ width: "100%", height: r.photoHeight || 240, overflow: "hidden", background: "#FAF1F3" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={r.photoUrl}
                     alt={r.name}
-                    style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: r.photoFit || "cover",
+                      objectPosition: r.photoPosition || "50% 30%",
+                      transform: r.photoZoom && r.photoZoom !== 1 ? `scale(${r.photoZoom})` : undefined,
+                      transformOrigin: r.photoPosition || "50% 30%",
+                      display: "block",
+                    }}
                   />
-                ) : (
-                  <div className="avatar-sm">{r.name[0]}</div>
-                )}
+                </div>
+              )}
+              <div style={{ padding: 16, display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, gap: 12 }}>
                 <div>
-                  <b style={{ fontSize: 13 }}>{r.name}</b>
-                  {r.place && <p className="muted">{r.place}</p>}
+                  <div style={{ color: "#C9A45C", fontSize: 14, marginBottom: 6 }}>
+                    {"★".repeat(r.rating)}{"☆".repeat(Math.max(0, 5 - r.rating))}
+                  </div>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.55 }}>&ldquo;{r.comment}&rdquo;</p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+                  {r.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.photoUrl}
+                      alt={r.name}
+                      style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", objectPosition: "center 30%" }}
+                    />
+                  ) : (
+                    <div className="avatar-sm">{r.name[0]}</div>
+                  )}
+                    <div>
+                    <b style={{ fontSize: 13 }}>{r.name}</b>
+                    {r.place && <p className="muted">{r.place}</p>}
+                  </div>
                 </div>
               </div>
             </article>

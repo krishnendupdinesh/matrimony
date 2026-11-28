@@ -2,6 +2,7 @@
 // app/help/page.tsx — also handles /help?report=<profileId> (links from profiles and chats)
 import { Suspense, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import { apiFetch, ApiError } from "@/lib/api";
 import PageShell from "../components/PageShell";
 
 const FAQ = [
@@ -19,14 +20,31 @@ function HelpInner() {
   const reportId = useSearchParams().get("report") ?? "";
   const [q, setQ] = useState(""); const [topic, setTopic] = useState(reportId ? TOPICS[0] : TOPICS[4]);
   const [pid, setPid] = useState(reportId); const [msg, setMsg] = useState(""); const [email, setEmail] = useState("");
-  const [err, setErr] = useState(""); const [sent, setSent] = useState(false);
+  const [err, setErr] = useState(""); const [sent, setSent] = useState(false); const [sending, setSending] = useState(false);
   const shown = FAQ.filter(([a, b]) => (a + b).toLowerCase().includes(q.toLowerCase()));
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr("");
     if (msg.trim().length < 10) return setErr("Please tell us a little more (at least 10 characters).");
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErr("Enter an email address so we can reply.");
-    setSent(true); // TODO: POST /api/support { topic, profileId: pid, message: msg, email } and email the ticket number
+    setSending(true);
+    try {
+      const subject = pid.trim() ? `${topic} (${pid.trim()})` : topic;
+      const fullMessage = `${msg.trim()}\n\nReply email: ${email.trim()}`;
+      await apiFetch("/api/support", {
+        method: "POST",
+        body: { category: topic, subject, message: fullMessage },
+      });
+      setSent(true);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErr(error.message);
+      } else {
+        setErr("Could not send your message. Please try again.");
+      }
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -51,7 +69,7 @@ function HelpInner() {
             <label className="field"><span>Your email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
             <label className="field"><span>Message</span><textarea rows={5} maxLength={1000} value={msg} onChange={(e) => setMsg(e.target.value)} /></label>
             {err && <p className="err" role="alert">{err}</p>}
-            <div><button className="btn btn--solid btn--inline">Send message</button></div>
+            <div><button className="btn btn--solid btn--inline" disabled={sending}>{sending ? "Sending…" : "Send message"}</button></div>
             <p className="muted">Or email help@sammatham.com</p>
           </form>)}
       </section>

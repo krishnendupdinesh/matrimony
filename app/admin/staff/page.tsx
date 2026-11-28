@@ -43,6 +43,22 @@ export default function AdminStaffPage() {
   const [editRole, setEditRole] = useState<AdminRole>("sales_support");
   const [editPerms, setEditPerms] = useState<string[]>([]);
   const [savingPerms, setSavingPerms] = useState(false);
+  const [origin, setOrigin] = useState("");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const copyUrl = async (key: string, url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2500);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
 
   const loadStaff = useCallback(async () => {
     if (!isSuperAdmin) return;
@@ -168,11 +184,54 @@ export default function AdminStaffPage() {
     return <p className="err">Only a super admin can manage staff access and permissions.</p>;
   }
 
+  const loginUrl = `${origin}/admin/login`;
+  const salesLoginUrl = `${origin}/sales/login`;
+
   return (
     <>
       <h1 className="ad__h">Admin access &amp; permissions</h1>
       {notice && <p className="ok" role="status">{notice}</p>}
       {error && <p className="err" role="alert">{error}</p>}
+
+      <section className="card" style={{ marginBottom: 16 }}>
+        <h2>Staff login URLs</h2>
+        <p className="muted" style={{ marginBottom: 10 }}>
+          Staff must sign in through their login URL before accessing any dashboard page.
+        </p>
+        <div style={{ display: "grid", gap: 8 }}>
+          {[
+            { key: "sales-login", label: "Sales & Support login", url: salesLoginUrl },
+            { key: "login", label: "Admin / Finance login", url: loginUrl },
+          ].map((item) => (
+            <div
+              key={item.key}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                flexWrap: "wrap",
+                padding: "8px 12px",
+                borderRadius: 8,
+                background: "var(--bg)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div>
+                <small className="muted" style={{ display: "block" }}>{item.label}</small>
+                <code style={{ fontSize: 13 }}>{item.url}</code>
+              </div>
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => copyUrl(item.key, item.url)}
+              >
+                {copiedKey === item.key ? "Copied!" : "Copy URL"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="ad__two" style={{ alignItems: "start" }}>
         <section className="card tblwrap">

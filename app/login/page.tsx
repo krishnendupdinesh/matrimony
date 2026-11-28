@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import type { ContentBanner } from "@/lib/types";
+import { useAuth } from "../components/AuthProvider";
 
 /* =====================================================================
    LOGIN PAGE — Kerala Matrimony-inspired white & maroon layout
@@ -50,6 +51,7 @@ const FALLBACK_BANNERS: ContentBanner[] = [
 
 export default function LoginForm() {
   const router = useRouter();
+  const { refresh } = useAuth();
 
   // Banner carousel state (loads live banners from Admin -> Content -> Banners)
   const [banners, setBanners] = useState<ContentBanner[]>(FALLBACK_BANNERS);
@@ -61,6 +63,7 @@ export default function LoginForm() {
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   const otpBoxes = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -135,16 +138,34 @@ export default function LoginForm() {
     otpBoxes.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
   }
 
-  function handleVerify(event: React.FormEvent) {
+  async function handleVerify(event: React.FormEvent) {
     event.preventDefault();
-
-    if (otp.join("") !== DEMO_OTP) {
-      setError("That code is not correct. Please try again.");
+    const code = otp.join("");
+    if (code.length !== OTP_LENGTH) {
+      setError("Please enter the 6-digit OTP.");
       return;
     }
 
     setError("");
-    router.push(AFTER_LOGIN_PATH);
+    setVerifying(true);
+    try {
+      await apiFetch("/api/auth/otp-login", {
+        method: "POST",
+        body: { fullName: fullName.trim(), mobile, otp: code },
+      });
+      await refresh();
+      setStep("details");
+      setOtp(Array(OTP_LENGTH).fill(""));
+      router.push(AFTER_LOGIN_PATH);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Could not reach the server. Please try again.");
+      }
+    } finally {
+      setVerifying(false);
+    }
   }
 
   function handleChangeNumber() {
@@ -213,7 +234,7 @@ export default function LoginForm() {
                   <img
                     src={currentBanner.imageUrl}
                     alt={currentBanner.title || "Advertisement banner"}
-                    className="h-full w-full object-cover object-top transition duration-500 hover:scale-[1.01]"
+                    className="h-full w-full object-cover object-[center_30%] transition duration-500 hover:scale-[1.01]"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#6B1530] to-[#4A0A0F] p-8 text-white">
@@ -369,8 +390,8 @@ export default function LoginForm() {
                   </p>
                 )}
 
-                <button type="submit" className={primaryButtonStyle}>
-                  Verify and sign in
+                <button type="submit" disabled={verifying} className={primaryButtonStyle}>
+                  {verifying ? "Verifying…" : "Verify and sign in"}
                 </button>
 
                 <p className="text-center text-sm text-[#6E6367]">
@@ -416,7 +437,7 @@ export default function LoginForm() {
                     <img
                       src={ad.imageUrl}
                       alt={ad.title}
-                      className="h-full w-full object-cover object-top"
+                      className="h-full w-full object-cover object-[center_30%]"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-[#6B1530] text-sm font-semibold text-white">
@@ -449,48 +470,53 @@ export default function LoginForm() {
         </div>
       </main>
 
-      {/* ============ FOOTER ============ */}
-      <footer className="border-t border-[#EAE6E4] bg-white py-10 text-sm text-[#6E6367]">
-        <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 sm:grid-cols-2 sm:px-6 md:grid-cols-4 lg:px-8">
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-maroon.png" alt="Sammatham" className="h-10 w-auto" />
-            <p className="mt-3 text-xs leading-relaxed text-[#6E6367]">
+      {/* ============ FOOTER (matches inner-page AppFooter layout) ============ */}
+      <footer className="mt-auto border-t border-[#EAE6E4] bg-white pb-7 pt-10 text-[#1F171A]">
+        <div className="mx-auto grid w-full max-w-[1400px] grid-cols-2 gap-6 px-4 md:grid-cols-[1.5fr_1fr_1fr_1fr] md:gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="inline-flex items-center" aria-label="Sammatham">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-maroon.png" alt="Sammatham" className="block h-[54px] w-auto" />
+            </Link>
+            <p className="mt-2.5 max-w-[280px] text-[12.5px] leading-[1.55] text-[#6E6367]">
               Verified profiles and real people to help, for Kerala families at home and abroad.
             </p>
           </div>
 
           <div>
-            <h3 className="font-semibold text-[#1F171A]">Find a match</h3>
-            <ul className="mt-3 space-y-2 text-xs">
+            <h4 className="mb-3 text-[14px] font-semibold text-[#1F171A]">Find a match</h4>
+            <ul className="grid gap-2 text-[13px] text-[#6E6367]">
               <li><Link href="/register" className="hover:text-[#6B1530]">Register free</Link></li>
-              <li><Link href="/plans" className="hover:text-[#6B1530]">Membership plans</Link></li>
+              <li><Link href="/matches" className="hover:text-[#6B1530]">Matches</Link></li>
               <li><Link href="/search" className="hover:text-[#6B1530]">Search profiles</Link></li>
+              <li><Link href="/plans" className="hover:text-[#6B1530]">Membership plans</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold text-[#1F171A]">Help &amp; support</h3>
-            <ul className="mt-3 space-y-2 text-xs">
-              <li><Link href="/help" className="hover:text-[#6B1530]">Help centre</Link></li>
-              <li><Link href="/privacy" className="hover:text-[#6B1530]">Safety tips</Link></li>
+            <h4 className="mb-3 text-[14px] font-semibold text-[#1F171A]">Help</h4>
+            <ul className="grid gap-2 text-[13px] text-[#6E6367]">
+              <li><Link href="/help" className="hover:text-[#6B1530]">Safety tips</Link></li>
+              <li><Link href="/help" className="hover:text-[#6B1530]">Talk to an advisor</Link></li>
+              <li><Link href="/plans" className="hover:text-[#6B1530]">Membership plans</Link></li>
               <li><Link href="/admin/login" className="hover:text-[#6B1530]">Staff portal</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold text-[#1F171A]">Legal</h3>
-            <ul className="mt-3 space-y-2 text-xs">
-              <li><Link href="/privacy" className="hover:text-[#6B1530]">Privacy policy</Link></li>
-              <li><Link href="/terms" className="hover:text-[#6B1530]">Terms of use</Link></li>
+            <h4 className="mb-3 text-[14px] font-semibold text-[#1F171A]">Account &amp; legal</h4>
+            <ul className="grid gap-2 text-[13px] text-[#6E6367]">
+              <li><Link href="/profile" className="hover:text-[#6B1530]">My profile</Link></li>
+              <li><Link href="/privacy" className="hover:text-[#6B1530]">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-[#6B1530]">Terms</Link></li>
               <li><Link href="/refund-policy" className="hover:text-[#6B1530]">Refund policy</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="mx-auto mt-8 max-w-[1440px] border-t border-[#EAE6E4] px-4 pt-5 text-xs text-[#8D8085] sm:px-6 lg:px-8">
+        <p className="mx-auto mt-8 max-w-[1400px] px-4 text-[12px] text-[#6E6367]">
           © 2026 Sammatham. All rights reserved.
-        </div>
+        </p>
       </footer>
     </div>
   );

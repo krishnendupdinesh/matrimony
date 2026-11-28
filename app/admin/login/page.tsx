@@ -1,11 +1,9 @@
 "use client";
 // app/admin/login/page.tsx — admin staff sign-in using email and password.
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { adminApiFetch, ApiError } from "@/lib/api";
 
 export default function AdminLogin() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -17,11 +15,18 @@ export default function AdminLogin() {
     setError("");
     setBusy(true);
     try {
-      await adminApiFetch("/api/admin/login", {
+      const data = await adminApiFetch<{ admin: { adminRole: string } }>("/api/admin/login", {
         method: "POST",
         body: { email: email.trim().toLowerCase(), password },
       });
-      router.replace("/admin");
+      const role = data.admin?.adminRole;
+      const landing =
+        role === "sales_support"
+          ? "/sales"
+          : role === "finance_content"
+            ? "/admin/payments"
+            : "/admin";
+      window.location.href = landing;
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

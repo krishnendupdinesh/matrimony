@@ -1,8 +1,10 @@
 "use client";
 // app/profile/page.tsx
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import type { OwnProfile } from "@/lib/types";
+import { useAuth } from "../components/AuthProvider";
 import Navbar from "../components/AppNavbar";
 import AppFooter from "../components/AppFooter";
 import "../styles/dashboard.css"; // shared theme
@@ -36,7 +38,7 @@ const MAX_PHOTOS = 6;
 
 const initial = {
   // Basic
-  profileFor: "Myself", name: "", gender: "Male", dob: "", height: "", maritalStatus: "Never married", motherTongue: "Malayalam",
+  profileFor: "Myself", name: "", gender: "", dob: "", height: "", bodyType: "", maritalStatus: "Never married", motherTongue: "Malayalam",
   // Location
   state: "Kerala", district: "", otherDistrict: "", place: "", houseName: "", pincode: "", landmark: "", mapLink: "", addressVisibility: "Accepted matches only",
   // Community
@@ -84,6 +86,8 @@ function SelectField({
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { refresh } = useAuth();
   const [form, setForm] = useState<Form>(initial);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [primaryId, setPrimaryId] = useState<string | null>(null);
@@ -109,9 +113,10 @@ export default function ProfilePage() {
         setForm({
           profileFor: p.profileFor || "Myself",
           name: p.name || "",
-          gender: p.gender === "female" ? "Female" : "Male",
+          gender: p.gender === "female" ? "Female" : p.gender === "male" ? "Male" : "",
           dob: dobStr,
           height: p.heightCm ? String(p.heightCm) : "",
+          bodyType: p.bodyType || "",
           maritalStatus: p.maritalStatus || "Never married",
           motherTongue: p.motherTongue || "Malayalam",
           state: p.state || "Kerala",
@@ -200,7 +205,7 @@ export default function ProfilePage() {
 
   const save = async () => {
     setError("");
-    if (!form.name.trim() || !form.dob || !form.place.trim()) { setError("Please fill in your name, date of birth and place."); return; }
+    if (!form.name.trim() || !form.gender || !form.dob || !form.place.trim()) { setError("Please fill in your name, gender, date of birth and place."); return; }
     if (form.pincode && !/^\d{6}$/.test(form.pincode)) { setError("Pincode must be 6 digits."); return; }
     setSaving(true);
     try {
@@ -211,6 +216,7 @@ export default function ProfilePage() {
         gender: form.gender.toLowerCase(),
         dob: form.dob,
         heightCm: form.height ? Number(form.height) : undefined,
+        bodyType: form.bodyType,
         maritalStatus: form.maritalStatus,
         motherTongue: form.motherTongue,
         state: form.state,
@@ -265,6 +271,8 @@ export default function ProfilePage() {
       }
 
       setSaved(true);
+      await refresh();
+      router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -322,9 +330,10 @@ export default function ProfilePage() {
           <div className="grid">
             <Field label="Profile created for">{select("profileFor", ["Myself","Son","Daughter","Brother","Sister","Relative"])}</Field>
             <Field label="Full name *"><input value={form.name} onChange={set("name")} /></Field>
-            <Field label="Gender">{select("gender", ["Male","Female"])}</Field>
+            <Field label="Gender *">{select("gender", ["Male","Female"], "Select gender")}</Field>
             <Field label="Date of birth *"><input type="date" value={form.dob} onChange={set("dob")} /></Field>
             <Field label="Height (cm)"><input type="number" min={120} max={220} value={form.height} onChange={set("height")} /></Field>
+            <Field label="Body type">{select("bodyType", ["Slim","Average","Athletic","Heavy"], "Select body type")}</Field>
             <Field label="Marital status">{select("maritalStatus", ["Never married","Divorced","Widowed","Awaiting divorce"])}</Field>
             <Field label="Mother tongue">{select("motherTongue", ["Malayalam","Tamil","Kannada","Hindi","English","Other"])}</Field>
           </div>

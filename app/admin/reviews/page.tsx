@@ -1,7 +1,6 @@
 "use client";
-// app/admin/reviews/page.tsx — review moderation and one-click promotion into the homepage Stories loop.
+// app/admin/reviews/page.tsx — review moderation and live photo frame editor.
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { adminApiFetch } from "@/lib/api";
 import type { ReviewItem } from "@/lib/types";
 import { useAdmin } from "../AdminContext";
@@ -17,6 +16,19 @@ function fmtDate(iso?: string) {
     : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Parses a CSS object-position string like "50% 30%" into numeric [x, y] percentages.
+function parsePosition(pos?: string): [number, number] {
+  const parts = String(pos || "50% 30%").trim().split(/\s+/);
+  const toPct = (v: string, fallback: number) => {
+    if (v === "left" || v === "top") return 0;
+    if (v === "center") return 50;
+    if (v === "right" || v === "bottom") return 100;
+    const n = parseInt(v, 10);
+    return Number.isNaN(n) ? fallback : Math.min(100, Math.max(0, n));
+  };
+  return [toPct(parts[0] || "50%", 50), toPct(parts[1] || "30%", 30)];
+}
+
 export default function AdminReviewsPage() {
   const { hasPermission } = useAdmin();
   const canManage = hasPermission("content.manage");
@@ -26,6 +38,17 @@ export default function AdminReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+
+  // Photo frame editor drawer state
+  const [framing, setFraming] = useState<ReviewItem | null>(null);
+  const [fit, setFit] = useState<"cover" | "contain">("cover");
+  const [posX, setPosX] = useState(50);
+  const [posY, setPosY] = useState(30);
+  const [zoom, setZoom] = useState(1);
+  const [frameHeight, setFrameHeight] = useState(240);
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [savingFrame, setSavingFrame] = useState(false);
 
   const loadReviews = useCallback(async () => {
     if (!canManage) return;
@@ -46,6 +69,60 @@ export default function AdminReviewsPage() {
     loadReviews();
   }, [loadReviews]);
 
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(""), 5000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
+  const openFramer = (r: ReviewItem) => {
+    const [x, y] = parsePosition(r.photoPosition);
+    setFraming(r);
+    setFit(r.photoFit || "cover");
+    setPosX(x);
+    setPosY(y);
+    setZoom(r.photoZoom || 1);
+    setFrameHeight(r.photoHeight || 240);
+    setReplacementFile(null);
+    setPreviewUrl(r.photoUrl || "");
+  };
+
+  const handleSaveFrame = async () => {
+    if (!framing) return;
+    setSavingFrame(true);
+    setErr("");
+    setMsg("");
+    try {
+      const position = `${posX}% ${posY}%`;
+      if (replacementFile) {
+        const fd = new FormData();
+        fd.append("photo", replacementFile);
+        fd.append("photoFit", fit);
+        fd.append("photoPosition", position);
+        fd.append("photoZoom", String(zoom));
+        fd.append("photoHeight", String(frameHeight));
+        await adminApiFetch(`/api/admin/reviews/${framing.id}`, { method: "PATCH", body: fd });
+      } else {
+        await adminApiFetch(`/api/admin/reviews/${framing.id}`, {
+          method: "PATCH",
+          body: {
+            photoFit: fit,
+            photoPosition: position,
+            photoZoom: zoom,
+            photoHeight: frameHeight,
+          },
+        });
+      }
+      setMsg(`Saved photo framing for ${framing.name}.`);
+      setFraming(null);
+      await loadReviews();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Could not save photo frame.");
+    } finally {
+      setSavingFrame(false);
+    }
+  };
+
   const setStatus = async (r: ReviewItem, status: "approved" | "rejected") => {
     setErr("");
     setMsg("");
@@ -58,19 +135,6 @@ export default function AdminReviewsPage() {
       await loadReviews();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Could not update review.");
-    }
-  };
-
-  const addToStories = async (r: ReviewItem) => {
-    if (!window.confirm(`Add review by ${r.name} to the homepage Stories loop?`)) return;
-    setErr("");
-    setMsg("");
-    try {
-      await adminApiFetch(`/api/admin/reviews/${r.id}/add-to-stories`, { method: "POST" });
-      setMsg(`Added ${r.name}'s review to the Stories loop!`);
-      await loadReviews();
-    } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Could not add review to Stories.");
     }
   };
 
@@ -93,12 +157,7 @@ export default function AdminReviewsPage() {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
-        <h1 className="ad__h" style={{ marginBottom: 0 }}>Review management</h1>
-        <Link href="/admin/content" className="btn btn--outline btn--sm">
-          Manage Stories directly →
-        </Link>
-      </div>
+      <h1 className="ad__h">Review management</h1>
 
       {msg && <p className="ok" role="status">{msg}</p>}
       {err && <p className="err" role="alert">{err}</p>}
@@ -135,7 +194,12 @@ export default function AdminReviewsPage() {
                     <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                       {r.photoUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.photoUrl} alt={r.name} className="ad-thumb" />
+                        <img
+                          src={r.photoUrl}
+                          alt={r.name}
+                          className="ad-thumb"
+                          style={{ objectFit: r.photoFit || "cover", objectPosition: r.photoPosition || "50% 30%" }}
+                        />
                       )}
                       <div>
                         <b>{r.name}</b>
@@ -149,14 +213,12 @@ export default function AdminReviewsPage() {
                   <td style={{ maxWidth: 340 }}>{r.comment}</td>
                   <td>
                     <Badge v={r.status} />
-                    {r.promotedStoryId && (
-                      <div style={{ marginTop: 4 }}>
-                        <span className="bdg bdg--ok">In Stories</span>
-                      </div>
-                    )}
                   </td>
                   <td className="muted">{fmtDate(r.createdAt)}</td>
                   <td className="acts">
+                    <button type="button" className="btn btn--outline btn--sm" onClick={() => openFramer(r)}>
+                      Frame photo
+                    </button>
                     {r.status !== "approved" && (
                       <button type="button" className="btn btn--solid btn--sm" onClick={() => setStatus(r, "approved")}>
                         Approve
@@ -164,12 +226,7 @@ export default function AdminReviewsPage() {
                     )}
                     {r.status !== "rejected" && (
                       <button type="button" className="btn btn--outline btn--sm" onClick={() => setStatus(r, "rejected")}>
-                        Reject
-                      </button>
-                    )}
-                    {!r.promotedStoryId && (
-                      <button type="button" className="btn btn--outline btn--sm" onClick={() => addToStories(r)}>
-                        Add to Stories
+                        Disable
                       </button>
                     )}
                     <button type="button" className="btn btn--danger btn--sm" onClick={() => removeReview(r)}>
@@ -182,6 +239,119 @@ export default function AdminReviewsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Interactive Photo Framing Drawer */}
+      {framing && (
+        <div className="ad-modal-bg" onClick={() => setFraming(null)}>
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Frame photo for ${framing.name}`}
+            className="ad-drawer ad-drawer--wide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ad-drawer__head">
+              <div>
+                <h2 style={{ margin: 0 }}>Photo frame — {framing.name}</h2>
+                <small className="muted">Adjust fit, focal position, zoom, and frame height as shown on cards.</small>
+              </div>
+              <button type="button" className="icon-btn" onClick={() => setFraming(null)} aria-label="Close">✕</button>
+            </div>
+
+            {/* Live Preview */}
+            <div style={{ border: "1px solid var(--line)", borderRadius: 12, overflow: "hidden", background: "#FAF1F3" }}>
+              {previewUrl ? (
+                <div style={{ width: "100%", height: frameHeight, overflow: "hidden", position: "relative" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewUrl}
+                    alt={framing.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: fit,
+                      objectPosition: `${posX}% ${posY}%`,
+                      transform: `scale(${zoom})`,
+                      transformOrigin: `${posX}% ${posY}%`,
+                      display: "block",
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{ height: 160, display: "grid", placeItems: "center" }} className="muted">
+                  No photo uploaded yet — choose a file below.
+                </div>
+              )}
+            </div>
+
+            <div className="ad-call-box">
+              <label className="field">
+                <span>Upload / replace photo (optional)</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setReplacementFile(file);
+                    if (file) setPreviewUrl(URL.createObjectURL(file));
+                  }}
+                />
+              </label>
+
+              <label className="field">
+                <span>Fit mode</span>
+                <select
+                  className="ad-select"
+                  value={fit}
+                  onChange={(e) => setFit(e.target.value as "cover" | "contain")}
+                >
+                  <option value="cover">Cover (fill entire frame)</option>
+                  <option value="contain">Contain (show full image without crop)</option>
+                </select>
+              </label>
+
+              <label className="field">
+                <span>Horizontal focus: {posX}%</span>
+                <input type="range" min={0} max={100} value={posX} onChange={(e) => setPosX(Number(e.target.value))} />
+              </label>
+
+              <label className="field">
+                <span>Vertical focus: {posY}%</span>
+                <input type="range" min={0} max={100} value={posY} onChange={(e) => setPosY(Number(e.target.value))} />
+              </label>
+
+              <label className="field">
+                <span>Zoom: {zoom.toFixed(2)}×</span>
+                <input type="range" min={1} max={2} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
+              </label>
+
+              <label className="field">
+                <span>Frame height: {frameHeight}px</span>
+                <input type="range" min={160} max={360} step={10} value={frameHeight} onChange={(e) => setFrameHeight(Number(e.target.value))} />
+              </label>
+            </div>
+
+            <div className="ad-drawer__foot">
+              <button type="button" className="btn btn--solid" disabled={savingFrame} onClick={handleSaveFrame}>
+                {savingFrame ? "Saving…" : "Save frame"}
+              </button>
+              <button
+                type="button"
+                className="btn btn--outline"
+                onClick={() => {
+                  setFit("cover");
+                  setPosX(50);
+                  setPosY(30);
+                  setZoom(1);
+                  setFrameHeight(240);
+                }}
+              >
+                Reset defaults
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
     </>
   );
 }

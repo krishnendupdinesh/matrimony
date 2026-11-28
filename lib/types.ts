@@ -67,6 +67,7 @@ export interface OwnProfile {
   mobile: string;
   email: string;
   heightCm: number | null;
+  bodyType?: string;
   maritalStatus: string;
   motherTongue: string;
   state: string;
@@ -122,6 +123,7 @@ export interface MemberCard {
   religion: string;
   community: string;
   heightCm: number | null;
+  bodyType?: string;
   maritalStatus: string;
   district: string;
   place: string;
@@ -166,6 +168,7 @@ export interface MemberDetail {
   community: string;
   subCommunity: string;
   heightCm: number | null;
+  bodyType?: string;
   maritalStatus: string;
   motherTongue: string;
   state: string;
@@ -291,10 +294,15 @@ export interface NotificationItem {
 export interface Plan {
   id: string;
   name: string;
+  blurb?: string;
   months: number;
+  periodLabel?: string;
   priceInr: number;
   contactsLimit: number;
+  ctaLabel?: string;
   popular?: boolean;
+  active?: boolean;
+  sortOrder?: number;
   features: string[];
 }
 
@@ -605,6 +613,10 @@ export interface ReviewItem {
   comment: string;
   photoUrl: string;
   publicId: string | null;
+  photoFit?: "cover" | "contain";
+  photoPosition?: string;
+  photoZoom?: number;
+  photoHeight?: number;
   status: "pending" | "approved" | "rejected";
   promotedStoryId: string | null;
   createdAt: string;

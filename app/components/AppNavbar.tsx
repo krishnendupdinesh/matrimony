@@ -65,8 +65,7 @@ function NavbarInner({ member, name }: NavbarProps) {
     } finally {
       setOpen(false);
       setLoggingOut(false);
-      router.replace("/login");
-      router.refresh();
+      window.location.href = "/login";
     }
   }
 
