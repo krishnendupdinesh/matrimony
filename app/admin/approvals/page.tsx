@@ -2,6 +2,7 @@
 // app/admin/approvals/page.tsx — new profiles, profile edits, and photos wait here before going live. TODO: GET /api/admin/approvals
 import { useEffect, useState } from "react";
 import { adminFetch } from "@/lib/adminApi";
+import { useAdmin } from "../AdminContext";
 import MemberDetails, { type FullProfile } from "../MemberDetails";
 
 type FieldChange = { field: string; before?: string; after: string };
@@ -126,6 +127,7 @@ const REASONS = [
 ];
 
 export default function Approvals() {
+  const { hasPermission } = useAdmin();
   const [items, setItems] = useState(SEED);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [drawerTab, setDrawerTab] = useState<"changes" | "profile">("changes");
@@ -160,6 +162,10 @@ export default function Approvals() {
       body: JSON.stringify({ approve, reason: approve ? undefined : reason }),
     }).catch(() => {});
   };
+
+  if (!hasPermission("verification.review")) {
+    return <p className="err">You do not have permission to review approvals.</p>;
+  }
 
   return (
     <>

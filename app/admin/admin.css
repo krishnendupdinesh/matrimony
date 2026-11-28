@@ -77,6 +77,24 @@
 .al__pw{position:relative}.al__pw input{padding-right:58px}.al__pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--maroon);font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer}
 .al .btn[disabled]{opacity:.6}.al .btn--block{margin-top:0}
 
+/* Permission checklist, forms, call timeline, switches */
+.ad-input,.ad-select,.ad-textarea{padding:8px 11px;border:1px solid var(--line);border-radius:8px;font:400 13px Inter,system-ui,sans-serif;background:#fff;color:var(--ink);width:100%;box-sizing:border-box}
+.ad-textarea{min-height:80px;resize:vertical}
+.ad-input:focus,.ad-select:focus,.ad-textarea:focus{outline:2px solid var(--maroon);outline-offset:1px}
+.ad-perms{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:6px;margin:10px 0}
+.ad-perm{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);cursor:pointer}
+.ad-perm input{accent-color:var(--maroon)}
+.ad-perm--locked{opacity:.55;cursor:not-allowed}
+.ad-call-box{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);display:grid;gap:10px}
+.ad-call-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ad-call-item{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12.5px}
+.ad-call-item__top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.ad-switch{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
+.ad-switch input{accent-color:var(--maroon);width:16px;height:16px}
+.ad-note{padding:10px 12px;border-radius:8px;background:var(--tint);color:var(--maroon);font-size:12.5px;margin-bottom:14px}
+.ad-thumb{width:64px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.ad-pager{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:13px}
+
 @media(max-width:900px){
   .ad{grid-template-columns:1fr}.ad__side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px;padding:12px}
   .ad__side nav{display:flex;overflow-x:auto;order:3;width:100%}.ad__who{margin:0 0 0 auto;padding:8px 12px}.ad__who small{display:none}

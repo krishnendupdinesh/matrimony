@@ -3,7 +3,7 @@
 .pf__head h1{font:700 24px Inter,system-ui,sans-serif;letter-spacing:-.4px;margin-bottom:4px}
 .pf__sec h2{font:700 16.5px Inter,system-ui,sans-serif;margin:0 0 4px}
 .pf__sec>.muted{margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;margin-top:12px}
+.pf .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;margin-top:12px}
 .field{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
 .field--wide{grid-column:1/-1}
 .field>span{font-weight:600}
@@ -35,6 +35,6 @@
 .savebar .btn[disabled]{opacity:.6;cursor:default}
 
 @media(max-width:640px){
-  .grid{grid-template-columns:1fr}
+  .pf .grid{grid-template-columns:1fr}
   .photos{grid-template-columns:repeat(2,1fr)}
 }

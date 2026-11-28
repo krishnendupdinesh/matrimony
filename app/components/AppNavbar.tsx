@@ -65,7 +65,7 @@ function NavbarInner({ member, name }: NavbarProps) {
     } finally {
       setOpen(false);
       setLoggingOut(false);
-      router.push("/");
+      router.replace("/login");
       router.refresh();
     }
   }

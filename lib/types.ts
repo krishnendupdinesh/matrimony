@@ -8,7 +8,7 @@ export type MemberStatus =
   | "suspended"
   | "deactivated";
 
-export type AdminRole = "super_admin" | "moderator" | "support";
+export type AdminRole = "super_admin" | "finance_content" | "sales_support";
 
 export interface Pagination {
   page: number;
@@ -44,6 +44,7 @@ export interface AdminUser {
   email: string;
   role: "admin";
   adminRole: AdminRole;
+  permissions: string[];
 }
 
 export interface ProfilePhoto {
@@ -366,8 +367,8 @@ export interface AdminStats {
   activeMembers: number;
   newMembersThisWeek: number;
   premiumMembers: number;
-  revenueThisMonthInr: number;
-  revenueTotalInr: number;
+  revenueThisMonthInr: number | null;
+  revenueTotalInr: number | null;
   openReports: number;
   openSupportTickets: number;
 }
@@ -475,6 +476,7 @@ export interface AdminStaffMember {
   mobile: string;
   role: string;
   adminRole: AdminRole;
+  permissions: string[];
   status: string;
   createdAt: string;
 }
@@ -488,5 +490,122 @@ export interface AdminAuditLog {
   targetType: string;
   targetId: string;
   details: string;
+  createdAt: string;
+}
+
+export interface CouponLimits {
+  maxPercentDiscount: number;
+  maxFlatDiscountInr: number;
+  requireExpiryDate: boolean;
+  requireUsageLimit: boolean;
+  maxValidityDays: number;
+}
+
+export interface AdminCoupon {
+  id: string;
+  code: string;
+  discountType: "percent" | "flat";
+  discountValue: number;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+export type CallQueueType = "new" | "incomplete" | "free" | "expiring" | "followups";
+
+export type CallOutcome =
+  | "answered"
+  | "no_answer"
+  | "interested"
+  | "not_interested"
+  | "call_back_later"
+  | "wrong_number";
+
+export interface CallQueueMember {
+  id: string;
+  name: string;
+  profileCode: string;
+  mobile: string;
+  status: string;
+  district: string;
+  activePlan: string;
+  planExpiresAt: string | null;
+  profileCompletion: number;
+  lastCallOutcome: CallOutcome | null;
+  lastCallAt: string | null;
+  nextFollowUpAt: string | null;
+  createdAt: string;
+}
+
+export interface CallLogItem {
+  id: string;
+  memberId: string;
+  staffId: string;
+  staffName: string;
+  outcome: CallOutcome;
+  note: string;
+  followUpAt: string | null;
+  createdAt: string;
+}
+
+export interface ContentBanner {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  publicId: string | null;
+  link: string;
+  active: boolean;
+  sortOrder: number;
+  startAt: string | null;
+  endAt: string | null;
+  createdAt: string;
+}
+
+export interface ContentFaq {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  sortOrder: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ContentStory {
+  id: string;
+  coupleNames: string;
+  story: string;
+  photoUrl: string;
+  publicId: string | null;
+  weddingDate: string | null;
+  status: "pending" | "published" | "hidden";
+  createdAt: string;
+}
+
+export interface ContentAnnouncement {
+  id: string;
+  title: string;
+  message: string;
+  audience: "all" | "free" | "premium";
+  sentAt: string | null;
+  recipientCount: number;
+  sentByName: string | null;
+  createdAt: string;
+}
+
+export interface ReviewItem {
+  id: string;
+  userId: string | null;
+  name: string;
+  place: string;
+  rating: number;
+  comment: string;
+  photoUrl: string;
+  publicId: string | null;
+  status: "pending" | "approved" | "rejected";
+  promotedStoryId: string | null;
   createdAt: string;
 }

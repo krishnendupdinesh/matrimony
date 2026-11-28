@@ -69,7 +69,7 @@ export default function NotificationDrawer({ open, onClose, items, setItems }: P
   return (
     <>
       <div className={`drawer-backdrop ${open ? "is-open" : ""}`} onClick={onClose} aria-hidden="true" />
-      <aside className={`drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Notifications" aria-hidden={!open} {...(!open && { inert: "" as never })}>
+      <aside className={`drawer ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Notifications" aria-hidden={!open} inert={!open}>
         <header className="drawer__head">
           <h2>Notifications{unread > 0 && <span className="sm-dot">{unread}</span>}</h2>
           <button ref={closeRef} className="drawer__close" onClick={onClose} aria-label="Close notifications">✕</button>

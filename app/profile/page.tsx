@@ -1,6 +1,8 @@
 "use client";
 // app/profile/page.tsx
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { apiFetch, ApiError } from "@/lib/api";
+import type { OwnProfile } from "@/lib/types";
 import Navbar from "../components/AppNavbar";
 import AppFooter from "../components/AppFooter";
 import "../styles/dashboard.css"; // shared theme
@@ -95,6 +97,70 @@ export default function ProfilePage() {
     photosRef.current = photos;
   }, [photos]);
 
+  // Load existing profile from backend on mount
+  useEffect(() => {
+    let active = true;
+    apiFetch<{ profile: OwnProfile }>("/api/profile")
+      .then(({ profile: p }) => {
+        if (!active || !p) return;
+        const dobStr = p.dob ? String(p.dob).slice(0, 10) : "";
+        const timeMatch = (p.timeOfBirth || "").match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        const isKeralaState = (p.state || "Kerala") === "Kerala";
+        setForm({
+          profileFor: p.profileFor || "Myself",
+          name: p.name || "",
+          gender: p.gender === "female" ? "Female" : "Male",
+          dob: dobStr,
+          height: p.heightCm ? String(p.heightCm) : "",
+          maritalStatus: p.maritalStatus || "Never married",
+          motherTongue: p.motherTongue || "Malayalam",
+          state: p.state || "Kerala",
+          district: isKeralaState ? p.district || "" : "",
+          otherDistrict: isKeralaState ? "" : p.district || "",
+          place: p.place || "",
+          houseName: p.houseName || "",
+          pincode: p.pincode || "",
+          landmark: p.landmark || "",
+          mapLink: p.mapLink || "",
+          addressVisibility: p.addressVisibility || "Accepted matches only",
+          religion: p.religion || "Hindu",
+          community: p.community || "",
+          subCommunity: p.subCommunity || "",
+          education: p.education || "",
+          college: p.college || "",
+          occupation: p.occupation || "",
+          employer: p.employer || "",
+          income: p.income || "",
+          workLocation: p.workLocation || "",
+          fatherOccupation: p.fatherOccupation || "",
+          motherOccupation: p.motherOccupation || "",
+          siblings: p.siblings || "",
+          familyType: p.familyType || "Nuclear",
+          familyStatus: p.familyStatus || "Middle class",
+          star: p.star || "",
+          rasi: p.rasi || "",
+          dosham: p.dosham || "No dosham",
+          birthHour: timeMatch ? timeMatch[1].padStart(2, "0") : "",
+          birthMinute: timeMatch ? timeMatch[2] : "",
+          birthPeriod: timeMatch ? timeMatch[3].toUpperCase() : "AM",
+          placeOfBirth: p.placeOfBirth || "",
+          diet: p.diet || "Vegetarian",
+          smoking: p.smoking || "No",
+          drinking: p.drinking || "No",
+          about: p.about || "",
+        });
+        if (Array.isArray(p.photos)) {
+          setPhotos(p.photos.map((ph) => ({ id: ph.id, url: ph.url })));
+          const primary = p.photos.find((ph) => ph.isPrimary) || p.photos[0];
+          setPrimaryId(primary ? primary.id : null);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Revoke object URLs on unmount
   useEffect(() => {
     return () => {
@@ -139,16 +205,72 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       const timeOfBirth = form.birthHour ? `${form.birthHour}:${form.birthMinute || "00"} ${form.birthPeriod}` : "";
-      const body = new FormData();
-      body.append("profile", JSON.stringify({ ...form, timeOfBirth }));
-      body.append("primaryPhotoId", primaryId ?? "");
-      photos.forEach((p) => p.file && body.append("photos", p.file, p.id));
-      // TODO: point at your real endpoint
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/profile`, { method: "PUT", body, credentials: "include" });
-      if (!res.ok) throw new Error();
+      const payload = {
+        profileFor: form.profileFor,
+        name: form.name.trim(),
+        gender: form.gender.toLowerCase(),
+        dob: form.dob,
+        heightCm: form.height ? Number(form.height) : undefined,
+        maritalStatus: form.maritalStatus,
+        motherTongue: form.motherTongue,
+        state: form.state,
+        district: form.state === "Kerala" ? form.district : form.otherDistrict,
+        place: form.place.trim(),
+        houseName: form.houseName,
+        pincode: form.pincode,
+        landmark: form.landmark,
+        mapLink: form.mapLink,
+        addressVisibility: form.addressVisibility,
+        religion: form.religion,
+        community: form.community,
+        subCommunity: form.subCommunity,
+        education: form.education,
+        college: form.college,
+        occupation: form.occupation,
+        employer: form.employer,
+        income: form.income,
+        workLocation: form.workLocation,
+        fatherOccupation: form.fatherOccupation,
+        motherOccupation: form.motherOccupation,
+        siblings: form.siblings,
+        familyType: form.familyType,
+        familyStatus: form.familyStatus,
+        star: form.star,
+        rasi: form.rasi,
+        dosham: form.dosham,
+        timeOfBirth,
+        placeOfBirth: form.placeOfBirth,
+        diet: form.diet,
+        smoking: form.smoking,
+        drinking: form.drinking,
+        about: form.about,
+      };
+
+      await apiFetch("/api/profile", { method: "PUT", body: payload });
+
+      // Upload any newly selected local photo files
+      const newFiles = photos.filter((p) => p.file);
+      if (newFiles.length > 0) {
+        const fd = new FormData();
+        newFiles.forEach((p) => p.file && fd.append("photos", p.file));
+        const photoRes = await apiFetch<{ photos: { id: string; url: string; isPrimary: boolean }[] }>(
+          "/api/profile/photos",
+          { method: "POST", body: fd },
+        );
+        if (Array.isArray(photoRes.photos)) {
+          setPhotos(photoRes.photos.map((ph) => ({ id: ph.id, url: ph.url })));
+          const primary = photoRes.photos.find((ph) => ph.isPrimary) || photoRes.photos[0];
+          setPrimaryId(primary ? primary.id : null);
+        }
+      }
+
       setSaved(true);
-    } catch {
-      setError("Could not save your profile. Check your connection and try again.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError("Could not save your profile. Check your connection and try again.");
+      }
     } finally {
       setSaving(false);
     }
