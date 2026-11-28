@@ -89,6 +89,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { refresh } = useAuth();
   const [form, setForm] = useState<Form>(initial);
+  const [genderLocked, setGenderLocked] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [primaryId, setPrimaryId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -110,10 +111,12 @@ export default function ProfilePage() {
         const dobStr = p.dob ? String(p.dob).slice(0, 10) : "";
         const timeMatch = (p.timeOfBirth || "").match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
         const isKeralaState = (p.state || "Kerala") === "Kerala";
+        const existingGender = p.gender === "female" ? "Female" : p.gender === "male" ? "Male" : "";
+        setGenderLocked(Boolean(existingGender));
         setForm({
           profileFor: p.profileFor || "Myself",
           name: p.name || "",
-          gender: p.gender === "female" ? "Female" : p.gender === "male" ? "Male" : "",
+          gender: existingGender,
           dob: dobStr,
           height: p.heightCm ? String(p.heightCm) : "",
           bodyType: p.bodyType || "",
@@ -205,7 +208,10 @@ export default function ProfilePage() {
 
   const save = async () => {
     setError("");
-    if (!form.name.trim() || !form.dob || !form.place.trim()) { setError("Please fill in your name, date of birth and place."); return; }
+    if (!form.name.trim() || (!genderLocked && !form.gender) || !form.dob || !form.place.trim()) {
+      setError("Please fill in your name, gender, date of birth and place.");
+      return;
+    }
     if (form.pincode && !/^\d{6}$/.test(form.pincode)) { setError("Pincode must be 6 digits."); return; }
     setSaving(true);
     try {
@@ -213,6 +219,7 @@ export default function ProfilePage() {
       const payload = {
         profileFor: form.profileFor,
         name: form.name.trim(),
+        ...(!genderLocked && form.gender ? { gender: form.gender.toLowerCase() } : {}),
         dob: form.dob,
         heightCm: form.height ? Number(form.height) : undefined,
         bodyType: form.bodyType,
@@ -329,9 +336,15 @@ export default function ProfilePage() {
           <div className="grid">
             <Field label="Profile created for">{select("profileFor", ["Myself","Son","Daughter","Brother","Sister","Relative"])}</Field>
             <Field label="Full name *"><input value={form.name} onChange={set("name")} /></Field>
-            <Field label="Gender" hint="Locked after registration. Contact support to change.">
-              <input value={form.gender || "—"} disabled readOnly />
-            </Field>
+            {genderLocked ? (
+              <Field label="Gender" hint="Locked after registration. Contact support to change.">
+                <input value={form.gender || "—"} disabled readOnly />
+              </Field>
+            ) : (
+              <Field label="Gender *" hint="Can only be set once.">
+                {select("gender", ["Male", "Female"], "Select gender")}
+              </Field>
+            )}
             <Field label="Date of birth *"><input type="date" value={form.dob} onChange={set("dob")} /></Field>
             <Field label="Height (cm)"><input type="number" min={120} max={220} value={form.height} onChange={set("height")} /></Field>
             <Field label="Body type">{select("bodyType", ["Slim","Average","Athletic","Heavy"], "Select body type")}</Field>
